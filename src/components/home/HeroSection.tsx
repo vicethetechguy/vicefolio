@@ -10,7 +10,7 @@ export const HeroSection = () => {
           <div className="lg:col-span-6 xl:col-span-5 relative pt-12 lg:pt-0">
             {/* Vertical Text */}
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 hidden lg:block opacity-0 animate-[slideInLeft_0.8s_ease-out_0.2s_forwards]"
+              className="absolute left-0 top-24 hidden lg:block opacity-0 animate-[slideInLeft_0.8s_ease-out_0.2s_forwards]"
             >
               <span className="vertical-text text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Business Developer
