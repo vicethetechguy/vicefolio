@@ -1,22 +1,27 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Type, 
+import {
+  LayoutDashboard,
+  FileText,
+  Type,
   Image as ImageIcon,
   Settings,
   LogOut
 } from "lucide-react";
+
+import { User, Briefcase, BarChart } from "lucide-react";
 
 export default function AdminLayout() {
   const location = useLocation();
 
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Portfolio", href: "/admin/portfolio", icon: Briefcase },
+    { name: "Services", href: "/admin/services", icon: BarChart },
+    { name: "About Me", href: "/admin/about", icon: User },
     { name: "Blogs", href: "/admin/blogs", icon: FileText },
-    { name: "Texts", href: "/admin/texts", icon: Type },
-    { name: "Images", href: "/admin/images", icon: ImageIcon },
+    { name: "Text Config", href: "/admin/texts", icon: Type },
+    { name: "Gallery", href: "/admin/images", icon: ImageIcon },
   ];
 
   return (
@@ -35,11 +40,10 @@ export default function AdminLayout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive 
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" 
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800"
-                  }`}
+                    }`}
                 >
                   <item.icon className="w-5 h-5" />
                   {item.name}

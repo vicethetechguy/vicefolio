@@ -1,34 +1,41 @@
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
 import victorPortrait from "@/assets/victor-chime.png";
+import { supabase } from "@/lib/supabase";
+
+interface ValueProp {
+  id: string;
+  title: string;
+  description: string;
+  order_index: number;
+}
 
 const About = () => {
   const [heroRef, heroInView] = useInView({ threshold: 0.1 });
   const [storyRef, storyInView] = useInView({ threshold: 0.1 });
   const [valuesRef, valuesInView] = useInView({ threshold: 0.1 });
 
-  const values = [
-    {
-      title: "Data-Driven",
-      description:
-        "Every strategic decision is backed by rigorous analysis and market research.",
-    },
-    {
-      title: "Results-Focused",
-      description:
-        "Success is measured by tangible outcomes: TVL, user growth, and sustainable tokenomics.",
-    },
-    {
-      title: "Ecosystem Thinking",
-      description:
-        "Building interconnected value across protocols, partners, and communities.",
-    },
-    {
-      title: "Long-Term Vision",
-      description:
-        "Designing systems that compound value over years, not just quarters.",
-    },
-  ];
+  const [values, setValues] = useState<ValueProp[]>([]);
+  const [loadingValues, setLoadingValues] = useState(true);
+
+  useEffect(() => {
+    const fetchValues = async () => {
+      const { data, error } = await supabase
+        .from("value_props")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching values:", error);
+      } else {
+        setValues(data || []);
+      }
+      setLoadingValues(false);
+    };
+
+    fetchValues();
+  }, []);
 
   return (
     <Layout>
@@ -37,9 +44,8 @@ const About = () => {
         <div className="container-vice">
           <div
             ref={heroRef}
-            className={`grid grid-cols-1 lg:grid-cols-2 gap-16 items-center transition-all duration-700 ${
-              heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+            className={`grid grid-cols-1 lg:grid-cols-2 gap-16 items-center transition-all duration-700 ${heroInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
           >
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
@@ -71,9 +77,8 @@ const About = () => {
         <div className="container-vice">
           <div
             ref={storyRef}
-            className={`max-w-3xl transition-all duration-700 ${
-              storyInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+            className={`max-w-3xl transition-all duration-700 ${storyInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
           >
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-8">
               My Journey
@@ -109,9 +114,8 @@ const About = () => {
         <div className="container-vice">
           <div
             ref={valuesRef}
-            className={`transition-all duration-700 ${
-              valuesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+            className={`transition-all duration-700 ${valuesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
           >
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
               Core Values
@@ -121,12 +125,19 @@ const About = () => {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {values.map((value, index) => (
+              {loadingValues ? (
+                <div className="col-span-1 md:col-span-2 text-center py-10 text-muted-foreground">
+                  Loading values...
+                </div>
+              ) : values.length === 0 ? (
+                <div className="col-span-1 md:col-span-2 text-center py-10 text-muted-foreground">
+                  No values entered yet.
+                </div>
+              ) : values.map((value, index) => (
                 <div
-                  key={value.title}
-                  className={`border-t border-border pt-8 transition-all duration-700 ${
-                    valuesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                  }`}
+                  key={value.id || value.title}
+                  className={`border-t border-border pt-8 transition-all duration-700 ${valuesInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                    }`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <h3 className="text-2xl font-light mb-4">{value.title}</h3>

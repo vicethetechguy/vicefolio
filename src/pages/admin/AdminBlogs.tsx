@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -13,6 +14,10 @@ interface Blog {
     date: string;
     status: string;
     content?: string;
+    excerpt?: string;
+    category?: string;
+    read_time?: string;
+    slug?: string;
 }
 
 export default function AdminBlogs() {
@@ -29,7 +34,7 @@ export default function AdminBlogs() {
 
     const fetchBlogs = async () => {
         setLoading(true);
-        const { data, error } = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
+        const { data, error } = await supabase.from("blogs").select("*").order("date", { ascending: false });
         if (error) {
             console.error("Error fetching blogs:", error);
             toast.error("Failed to fetch blogs");
@@ -40,35 +45,36 @@ export default function AdminBlogs() {
     };
 
     const handleSave = async () => {
-        if (!currentBlog.title || !currentBlog.date || !currentBlog.status) {
-            toast.error("Please fill in all required fields.");
+        if (!currentBlog.title || !currentBlog.date || !currentBlog.status || !currentBlog.slug) {
+            toast.error("Title, Date, Status, and Slug are required.");
             return;
         }
         setSaving(true);
+
+        const payload = {
+            title: currentBlog.title,
+            date: currentBlog.date,
+            status: currentBlog.status,
+            excerpt: currentBlog.excerpt,
+            category: currentBlog.category,
+            read_time: currentBlog.read_time,
+            slug: currentBlog.slug,
+            content: currentBlog.content,
+        };
 
         let error;
         if (currentBlog.id) {
             // Update
             const { error: updateError } = await supabase
                 .from("blogs")
-                .update({
-                    title: currentBlog.title,
-                    date: currentBlog.date,
-                    status: currentBlog.status,
-                })
+                .update(payload)
                 .eq("id", currentBlog.id);
             error = updateError;
         } else {
             // Insert
             const { error: insertError } = await supabase
                 .from("blogs")
-                .insert([
-                    {
-                        title: currentBlog.title,
-                        date: currentBlog.date,
-                        status: currentBlog.status,
-                    }
-                ]);
+                .insert([payload]);
             error = insertError;
         }
 
@@ -102,7 +108,14 @@ export default function AdminBlogs() {
     };
 
     const openCreateDialog = () => {
-        setCurrentBlog({ title: "", date: new Date().toISOString().split('T')[0], status: "Draft" });
+        setCurrentBlog({
+            title: "",
+            date: new Date().toISOString().split('T')[0],
+            status: "Published",
+            slug: "",
+            category: "General",
+            read_time: "5 min read"
+        });
         setIsDialogOpen(true);
     };
 
@@ -121,20 +134,27 @@ export default function AdminBlogs() {
                             New Blog Post
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>{currentBlog.id ? "Edit Blog" : "Create Blog"}</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Title</label>
+                        <div className="grid grid-cols-2 gap-4 py-4">
+                            <div className="space-y-2 col-span-2">
+                                <label className="text-sm font-medium">Title *</label>
                                 <Input
                                     value={currentBlog.title || ""}
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, title: e.target.value })}
+                                    onChange={(e) => setCurrentBlog({ ...currentBlog, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Date</label>
+                                <label className="text-sm font-medium">Slug *</label>
+                                <Input
+                                    value={currentBlog.slug || ""}
+                                    onChange={(e) => setCurrentBlog({ ...currentBlog, slug: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Date *</label>
                                 <Input
                                     type="date"
                                     value={currentBlog.date || ""}
@@ -142,7 +162,22 @@ export default function AdminBlogs() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Status</label>
+                                <label className="text-sm font-medium">Category</label>
+                                <Input
+                                    value={currentBlog.category || ""}
+                                    onChange={(e) => setCurrentBlog({ ...currentBlog, category: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Read Time</label>
+                                <Input
+                                    value={currentBlog.read_time || ""}
+                                    placeholder="e.g. 5 min read"
+                                    onChange={(e) => setCurrentBlog({ ...currentBlog, read_time: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2 col-span-2">
+                                <label className="text-sm font-medium">Status *</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                                     value={currentBlog.status || "Draft"}
@@ -151,6 +186,23 @@ export default function AdminBlogs() {
                                     <option value="Draft">Draft</option>
                                     <option value="Published">Published</option>
                                 </select>
+                            </div>
+                            <div className="space-y-2 col-span-2">
+                                <label className="text-sm font-medium">Excerpt (Short Description)</label>
+                                <Textarea
+                                    value={currentBlog.excerpt || ""}
+                                    className="min-h-[80px]"
+                                    onChange={(e) => setCurrentBlog({ ...currentBlog, excerpt: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2 col-span-2">
+                                <label className="text-sm font-medium">Full Content</label>
+                                <Textarea
+                                    value={currentBlog.content || ""}
+                                    className="min-h-[200px]"
+                                    placeholder="Write your blog content here..."
+                                    onChange={(e) => setCurrentBlog({ ...currentBlog, content: e.target.value })}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
@@ -181,6 +233,7 @@ export default function AdminBlogs() {
                                 <thead className="[&_tr]:border-b">
                                     <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Title</th>
+                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Category</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
                                         <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
@@ -189,13 +242,14 @@ export default function AdminBlogs() {
                                 <tbody className="[&_tr:last-child]:border-0">
                                     {blogs.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="text-center py-10 text-muted-foreground">
+                                            <td colSpan={5} className="text-center py-10 text-muted-foreground">
                                                 No blogs found.
                                             </td>
                                         </tr>
                                     ) : blogs.map((blog) => (
                                         <tr key={blog.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                            <td className="p-4 align-middle font-medium">{blog.title}</td>
+                                            <td className="p-4 align-middle font-medium truncate max-w-[200px]" title={blog.title}>{blog.title}</td>
+                                            <td className="p-4 align-middle">{blog.category || '-'}</td>
                                             <td className="p-4 align-middle">{blog.date}</td>
                                             <td className="p-4 align-middle">
                                                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${blog.status === 'Published' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'}`}>

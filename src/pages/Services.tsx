@@ -1,77 +1,48 @@
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
-import { ArrowUpRight, Coins, Rocket, BarChart3, Users, Check } from "lucide-react";
+import { ArrowUpRight, Check, Coins, Rocket, BarChart3, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
-const services = [
-  {
-    id: "tokenomics",
-    icon: Coins,
-    title: "Tokenomics Design",
-    description:
-      "Comprehensive token economic models that align incentives, drive adoption, and maximize long-term value.",
-    features: [
-      "Token supply and distribution modeling",
-      "Incentive mechanism design",
-      "Vesting schedule optimization",
-      "Staking and rewards architecture",
-      "Economic simulation and stress testing",
-      "Governance framework design",
-    ],
-    price: "From $15,000",
-  },
-  {
-    id: "gtm",
-    icon: Rocket,
-    title: "Go-to-Market Strategy",
-    description:
-      "Strategic launch planning and execution to maximize adoption and market penetration.",
-    features: [
-      "Market positioning and messaging",
-      "Launch timeline and milestones",
-      "Community building strategy",
-      "Influencer and KOL partnerships",
-      "Exchange listing strategy",
-      "Marketing campaign architecture",
-    ],
-    price: "From $12,000",
-  },
-  {
-    id: "product",
-    icon: BarChart3,
-    title: "Product Strategy",
-    description:
-      "End-to-end product vision and roadmap development for protocols and dApps.",
-    features: [
-      "Product vision and positioning",
-      "Feature prioritization framework",
-      "User research and personas",
-      "Competitive analysis",
-      "Roadmap development",
-      "KPI definition and tracking",
-    ],
-    price: "From $10,000",
-  },
-  {
-    id: "bizdev",
-    icon: Users,
-    title: "Business Development",
-    description:
-      "Strategic partnership cultivation and ecosystem growth across the Web3 landscape.",
-    features: [
-      "Partnership strategy development",
-      "Ecosystem mapping and targeting",
-      "Integration facilitation",
-      "Strategic alliance negotiation",
-      "Cross-protocol collaboration",
-      "Investor relations support",
-    ],
-    price: "From $8,000",
-  },
-];
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  icon: string;
+  features: string[];
+}
+
+const iconMap: Record<string, any> = {
+  Coins: Coins,
+  Rocket: Rocket,
+  BarChart3: BarChart3,
+  Users: Users,
+};
 
 const Services = () => {
   const [headerRef, headerInView] = useInView({ threshold: 0.1 });
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching services:", error);
+      } else {
+        setServices(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchServices();
+  }, []);
 
   return (
     <Layout>
@@ -80,9 +51,8 @@ const Services = () => {
         <div className="container-vice">
           <div
             ref={headerRef}
-            className={`max-w-4xl transition-all duration-700 ${
-              headerInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+            className={`max-w-4xl transition-all duration-700 ${headerInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
           >
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
               Services
@@ -102,20 +72,29 @@ const Services = () => {
       <section className="pb-20">
         <div className="container-vice">
           <div className="space-y-24">
-            {services.map((service, index) => {
+            {loading ? (
+              <div className="text-center py-20 text-muted-foreground">
+                Loading services...
+              </div>
+            ) : services.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                No services available at the moment.
+              </div>
+            ) : services.map((service, index) => {
               const [ref, inView] = useInView({ threshold: 0.1 });
+              const IconComponent = iconMap[service.icon] || Rocket;
+
               return (
                 <div
                   key={service.id}
                   id={service.id}
                   ref={ref}
-                  className={`grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 border-t border-border pt-16 transition-all duration-700 ${
-                    inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                  }`}
+                  className={`grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 border-t border-border pt-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                    }`}
                   style={{ transitionDelay: `${index * 50}ms` }}
                 >
                   <div>
-                    <service.icon className="w-10 h-10 mb-6 text-muted-foreground" />
+                    <IconComponent className="w-10 h-10 mb-6 text-muted-foreground" />
                     <h2 className="text-3xl md:text-4xl font-light mb-4">
                       {service.title}
                     </h2>
@@ -129,9 +108,9 @@ const Services = () => {
                       What's Included
                     </h3>
                     <ul className="space-y-4">
-                      {service.features.map((feature) => (
+                      {service.features?.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <Check className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <Check className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                           <span>{feature}</span>
                         </li>
                       ))}
