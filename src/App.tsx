@@ -13,6 +13,11 @@ import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminBlogs from "./pages/admin/AdminBlogs";
+import AdminTexts from "./pages/admin/AdminTexts";
+import AdminImages from "./pages/admin/AdminImages";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +39,12 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="blogs" element={<AdminBlogs />} />
+            <Route path="texts" element={<AdminTexts />} />
+            <Route path="images" element={<AdminImages />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
