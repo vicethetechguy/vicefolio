@@ -61,11 +61,29 @@ const About = () => {
               </p>
             </div>
             <div className="relative">
-              <img
-                src={victorPortrait}
-                alt="Victor Chime"
-                className="w-full aspect-[3/4] object-cover grayscale"
-              />
+              {getText("media_about_profile", "") ? (
+                getText("media_about_profile", "").match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video 
+                    src={getText("media_about_profile", "")} 
+                    autoPlay 
+                    loop 
+                    muted 
+                    className="w-full aspect-[3/4] object-cover grayscale rounded-2xl"
+                  />
+                ) : (
+                  <img
+                    src={getText("media_about_profile", "")}
+                    alt="Victor Chime"
+                    className="w-full aspect-[3/4] object-cover grayscale rounded-2xl"
+                  />
+                )
+              ) : (
+                <img
+                  src={victorPortrait}
+                  alt="Victor Chime"
+                  className="w-full aspect-[3/4] object-cover grayscale rounded-2xl"
+                />
+              )}
             </div>
           </div>
         </div>

@@ -68,11 +68,29 @@ export const HeroSection = () => {
             className="lg:col-span-6 xl:col-span-7 relative flex justify-center lg:justify-end items-end opacity-0 animate-[fadeIn_1s_ease-out_0.4s_forwards]"
           >
             <div className="relative w-full max-w-lg lg:max-w-none lg:w-auto">
-              <img
-                src={victorPortrait}
-                alt="Victor Chime - Business Developer & Tokenomist"
-                className="w-full h-auto lg:h-[85vh] object-cover object-top grayscale"
-              />
+              {getText("media_hero_bg", "") ? (
+                getText("media_hero_bg", "").match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video 
+                    src={getText("media_hero_bg", "")} 
+                    autoPlay 
+                    loop 
+                    muted 
+                    className="w-full h-auto lg:h-[85vh] object-cover object-top grayscale"
+                  />
+                ) : (
+                  <img
+                    src={getText("media_hero_bg", "")}
+                    alt="Victor Chime"
+                    className="w-full h-auto lg:h-[85vh] object-cover object-top grayscale"
+                  />
+                )
+              ) : (
+                <img
+                  src={victorPortrait}
+                  alt="Victor Chime - Business Developer & Tokenomist"
+                  className="w-full h-auto lg:h-[85vh] object-cover object-top grayscale"
+                />
+              )}
               {/* Subtle gradient overlay at bottom */}
               <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
             </div>
