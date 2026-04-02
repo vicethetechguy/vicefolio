@@ -5,14 +5,30 @@ import {
   FileText,
   Type,
   Image as ImageIcon,
-  Settings,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
-
 import { User, Briefcase, BarChart } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import AdminLogin from "./AdminLogin";
 
 export default function AdminLayout() {
   const location = useLocation();
+  const { user, loading, signOut } = useAuth();
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!user) {
+    return <AdminLogin />;
+  }
 
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -25,7 +41,7 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-950">
+    <div className="admin-layout flex min-h-screen bg-gray-100 dark:bg-gray-950">
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 hidden md:block">
         <div className="h-full flex flex-col">
@@ -54,7 +70,18 @@ export default function AdminLayout() {
             })}
           </nav>
 
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-1">
+            {/* Logged-in user badge */}
+            <div className="px-3 py-2 text-xs text-gray-400 truncate">
+              {user.email}
+            </div>
+            <button
+              onClick={signOut}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              Sign Out
+            </button>
             <Link
               to="/"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 transition-colors"

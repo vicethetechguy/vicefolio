@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, X, Loader2 } from "lucide-react";
+import { UploadCloud, X, Loader2, Play } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { isVideoUrl } from "@/components/ui/media-uploader";
 
-interface GalleryImage {
+interface GalleryItem {
     id: string;
     url: string;
     filename: string;
@@ -13,27 +14,17 @@ interface GalleryImage {
 }
 
 export default function AdminImages() {
-    const [images, setImages] = useState<GalleryImage[]>([]);
+    const [items, setItems] = useState<GalleryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
-    useEffect(() => {
-        fetchImages();
-    }, []);
+    useEffect(() => { fetchItems(); }, []);
 
-    const fetchImages = async () => {
+    const fetchItems = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from("images")
-            .select("*")
-            .order("created_at", { ascending: false });
-
-        if (error) {
-            console.error("Error fetching images:", error);
-            toast.error("Failed to load images");
-        } else {
-            setImages(data || []);
-        }
+        const { data, error } = await supabase.from("images").select("*").order("created_at", { ascending: false });
+        if (error) { toast.error("Failed to load gallery"); }
+        else { setItems(data || []); }
         setLoading(false);
     };
 
@@ -41,78 +32,70 @@ export default function AdminImages() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+        if (!isImage && !isVideo) {
+            toast.error("Please select an image or video file.");
+            return;
+        }
+        if (file.size > 50 * 1024 * 1024) {
+            toast.error("File must be under 50MB.");
+            return;
+        }
+
         setUploading(true);
         try {
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
 
-            // Upload to Supabase Storage
-            const { error: uploadError } = await supabase.storage
-                .from("images")
-                .upload(fileName, file);
-
+            const { error: uploadError } = await supabase.storage.from("images").upload(fileName, file);
             if (uploadError) throw uploadError;
 
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from("images")
-                .getPublicUrl(fileName);
+            const { data: { publicUrl } } = supabase.storage.from("images").getPublicUrl(fileName);
 
-            // Insert directly into the database
-            const { error: dbError } = await supabase
-                .from("images")
-                .insert([{ url: publicUrl, filename: file.name }]);
-
+            const { error: dbError } = await supabase.from("images").insert([{ url: publicUrl, filename: file.name }]);
             if (dbError) throw dbError;
 
-            toast.success("Image uploaded successfully");
-            fetchImages();
+            toast.success(`${isVideo ? "Video" : "Image"} uploaded successfully`);
+            fetchItems();
         } catch (error: any) {
             console.error("Upload failed", error);
-            toast.error(error.message || "Failed to upload image");
+            toast.error(error.message || "Failed to upload file");
         } finally {
             setUploading(false);
         }
     };
 
-    const handleDelete = async (image: GalleryImage) => {
+    const handleDelete = async (item: GalleryItem) => {
         try {
-            // Delete from database
-            const { error: dbError } = await supabase
-                .from("images")
-                .delete()
-                .eq("id", image.id);
+            const { error: dbError } = await supabase.from("images").delete().eq("id", item.id);
             if (dbError) throw dbError;
 
-            // Try to extract filename from URL and delete from storage
             try {
-                const urlParts = image.url.split("/");
+                const urlParts = item.url.split("/");
                 const storedFileName = urlParts[urlParts.length - 1];
                 if (storedFileName) {
                     await supabase.storage.from("images").remove([storedFileName]);
                 }
-            } catch (ignored) {
-                // Ignore storage delete errors if DB delete succeeds
-            }
+            } catch (ignored) {}
 
-            setImages(images.filter((img) => img.id !== image.id));
-            toast.success("Image deleted");
+            setItems(items.filter((i) => i.id !== item.id));
+            toast.success("Deleted successfully");
         } catch (error: any) {
-            console.error("Delete failed", error);
-            toast.error(error.message || "Failed to delete image");
+            toast.error(error.message || "Failed to delete");
         }
     };
 
     if (loading) {
-        return <div className="p-8 text-center text-muted-foreground">Loading images...</div>;
+        return <div className="p-8 text-center text-muted-foreground">Loading gallery...</div>;
     }
 
     return (
         <div className="p-8 max-h-screen overflow-y-auto w-full">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Gallery Images</h2>
-                    <p className="text-muted-foreground mt-2">Upload and manage images for your portfolio and blogs.</p>
+                    <h2 className="text-3xl font-bold tracking-tight">Gallery</h2>
+                    <p className="text-muted-foreground mt-2">Upload and manage images and videos for your portfolio and blogs.</p>
                 </div>
             </div>
 
@@ -125,15 +108,15 @@ export default function AdminImages() {
                             <UploadCloud className="w-12 h-12 text-muted-foreground mb-4" />
                         )}
                         <h3 className="text-lg font-medium mb-1">
-                            {uploading ? "Uploading..." : "Drag & drop your image here"}
+                            {uploading ? "Uploading..." : "Drag & drop your file here"}
                         </h3>
-                        <p className="text-sm text-muted-foreground mb-4">PNG, JPG or WebP up to 5MB</p>
+                        <p className="text-sm text-muted-foreground mb-4">Images (PNG, JPG, WebP) or Videos (MP4, WebM, MOV) up to 50MB</p>
                         <Button variant="secondary" asChild disabled={uploading}>
                             <span>Browse Files</span>
                         </Button>
                         <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,video/*"
                             className="hidden"
                             onChange={handleFileUpload}
                             disabled={uploading}
@@ -142,34 +125,49 @@ export default function AdminImages() {
                 </CardContent>
             </Card>
 
-            {images.length === 0 ? (
+            {items.length === 0 ? (
                 <div className="text-center py-10 text-muted-foreground">
-                    No images found. Upload one to get started!
+                    No media found. Upload one to get started!
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {images.map((img) => (
-                        <div key={img.id} className="relative group rounded-lg overflow-hidden border">
-                            <img
-                                src={img.url}
-                                alt={`Gallery item ${img.filename}`}
-                                className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    className="w-8 h-8 rounded-full"
-                                    onClick={() => handleDelete(img)}
-                                >
-                                    <X className="w-4 h-4" />
-                                </Button>
+                    {items.map((item) => {
+                        const isVideo = isVideoUrl(item.url);
+                        return (
+                            <div key={item.id} className="relative group rounded-lg overflow-hidden border bg-black">
+                                {isVideo ? (
+                                    <video
+                                        src={item.url}
+                                        controls
+                                        muted
+                                        playsInline
+                                        preload="metadata"
+                                        className="w-full h-48 object-contain bg-black"
+                                    />
+                                ) : (
+                                    <img
+                                        src={item.url}
+                                        alt={`Gallery item ${item.filename}`}
+                                        className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                                    />
+                                )}
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="w-8 h-8 rounded-full shadow-lg"
+                                        onClick={() => handleDelete(item)}
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <div className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-xs p-2 truncate flex items-center gap-1.5">
+                                    {isVideo && <Play className="w-3 h-3 flex-shrink-0 fill-white" />}
+                                    {item.filename}
+                                </div>
                             </div>
-                            <div className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-xs p-2 truncate">
-                                {img.filename}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

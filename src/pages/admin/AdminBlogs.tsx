@@ -7,6 +7,7 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { MediaUploader, MediaThumbnail } from "@/components/ui/media-uploader";
 
 interface Blog {
     id: string;
@@ -18,29 +19,23 @@ interface Blog {
     category?: string;
     read_time?: string;
     slug?: string;
+    image_url?: string;
 }
 
 export default function AdminBlogs() {
     const [blogs, setBlogs] = useState<Blog[]>([]);
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-
     const [currentBlog, setCurrentBlog] = useState<Partial<Blog>>({});
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        fetchBlogs();
-    }, []);
+    useEffect(() => { fetchBlogs(); }, []);
 
     const fetchBlogs = async () => {
         setLoading(true);
         const { data, error } = await supabase.from("blogs").select("*").order("date", { ascending: false });
-        if (error) {
-            console.error("Error fetching blogs:", error);
-            toast.error("Failed to fetch blogs");
-        } else {
-            setBlogs(data || []);
-        }
+        if (error) { toast.error("Failed to fetch blogs"); }
+        else { setBlogs(data || []); }
         setLoading(false);
     };
 
@@ -50,72 +45,36 @@ export default function AdminBlogs() {
             return;
         }
         setSaving(true);
-
         const payload = {
-            title: currentBlog.title,
-            date: currentBlog.date,
-            status: currentBlog.status,
-            excerpt: currentBlog.excerpt,
-            category: currentBlog.category,
-            read_time: currentBlog.read_time,
-            slug: currentBlog.slug,
-            content: currentBlog.content,
+            title: currentBlog.title, date: currentBlog.date, status: currentBlog.status,
+            excerpt: currentBlog.excerpt, category: currentBlog.category,
+            read_time: currentBlog.read_time, slug: currentBlog.slug,
+            content: currentBlog.content, image_url: currentBlog.image_url || "",
         };
-
         let error;
         if (currentBlog.id) {
-            // Update
-            const { error: updateError } = await supabase
-                .from("blogs")
-                .update(payload)
-                .eq("id", currentBlog.id);
-            error = updateError;
+            const { error: e } = await supabase.from("blogs").update(payload).eq("id", currentBlog.id);
+            error = e;
         } else {
-            // Insert
-            const { error: insertError } = await supabase
-                .from("blogs")
-                .insert([payload]);
-            error = insertError;
+            const { error: e } = await supabase.from("blogs").insert([payload]);
+            error = e;
         }
-
-        if (error) {
-            console.error("Error saving blog:", error);
-            toast.error("Failed to save blog");
-        } else {
-            toast.success("Blog saved successfully");
-            setIsDialogOpen(false);
-            fetchBlogs();
-        }
+        if (error) { toast.error("Failed to save blog"); }
+        else { toast.success("Blog saved successfully"); setIsDialogOpen(false); fetchBlogs(); }
         setSaving(false);
     };
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Are you sure you want to delete this blog?")) return;
-
         const { error } = await supabase.from("blogs").delete().eq("id", id);
-        if (error) {
-            console.error("Error deleting blog:", error);
-            toast.error("Failed to delete blog");
-        } else {
-            toast.success("Blog deleted");
-            setBlogs(blogs.filter((b) => b.id !== id));
-        }
+        if (error) { toast.error("Failed to delete blog"); }
+        else { toast.success("Blog deleted"); setBlogs(blogs.filter((b) => b.id !== id)); }
     };
 
-    const openEditDialog = (blog: Blog) => {
-        setCurrentBlog(blog);
-        setIsDialogOpen(true);
-    };
+    const openEditDialog = (blog: Blog) => { setCurrentBlog(blog); setIsDialogOpen(true); };
 
     const openCreateDialog = () => {
-        setCurrentBlog({
-            title: "",
-            date: new Date().toISOString().split('T')[0],
-            status: "Published",
-            slug: "",
-            category: "General",
-            read_time: "5 min read"
-        });
+        setCurrentBlog({ title: "", date: new Date().toISOString().split('T')[0], status: "Published", slug: "", category: "General", read_time: "5 min read", image_url: "" });
         setIsDialogOpen(true);
     };
 
@@ -126,90 +85,59 @@ export default function AdminBlogs() {
                     <h2 className="text-3xl font-bold tracking-tight">Manage Blogs</h2>
                     <p className="text-muted-foreground mt-2">Create, edit, or delete your blog posts.</p>
                 </div>
-
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="flex gap-2" onClick={openCreateDialog}>
-                            <PlusCircle className="w-4 h-4" />
-                            New Blog Post
-                        </Button>
+                        <Button className="flex gap-2" onClick={openCreateDialog}><PlusCircle className="w-4 h-4" /> New Blog Post</Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>{currentBlog.id ? "Edit Blog" : "Create Blog"}</DialogTitle>
-                        </DialogHeader>
+                        <DialogHeader><DialogTitle>{currentBlog.id ? "Edit Blog" : "Create Blog"}</DialogTitle></DialogHeader>
                         <div className="grid grid-cols-2 gap-4 py-4">
+                            <div className="col-span-2">
+                                <MediaUploader
+                                    value={currentBlog.image_url || ""}
+                                    onChange={(url) => setCurrentBlog({ ...currentBlog, image_url: url })}
+                                    label="Cover Image / Video"
+                                />
+                            </div>
                             <div className="space-y-2 col-span-2">
                                 <label className="text-sm font-medium">Title *</label>
-                                <Input
-                                    value={currentBlog.title || ""}
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') })}
-                                />
+                                <Input value={currentBlog.title || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') })} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Slug *</label>
-                                <Input
-                                    value={currentBlog.slug || ""}
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, slug: e.target.value })}
-                                />
+                                <Input value={currentBlog.slug || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, slug: e.target.value })} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Date *</label>
-                                <Input
-                                    type="date"
-                                    value={currentBlog.date || ""}
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, date: e.target.value })}
-                                />
+                                <Input type="date" value={currentBlog.date || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, date: e.target.value })} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Category</label>
-                                <Input
-                                    value={currentBlog.category || ""}
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, category: e.target.value })}
-                                />
+                                <Input value={currentBlog.category || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, category: e.target.value })} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Read Time</label>
-                                <Input
-                                    value={currentBlog.read_time || ""}
-                                    placeholder="e.g. 5 min read"
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, read_time: e.target.value })}
-                                />
+                                <Input value={currentBlog.read_time || ""} placeholder="e.g. 5 min read" onChange={(e) => setCurrentBlog({ ...currentBlog, read_time: e.target.value })} />
                             </div>
                             <div className="space-y-2 col-span-2">
                                 <label className="text-sm font-medium">Status *</label>
-                                <select
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-                                    value={currentBlog.status || "Draft"}
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, status: e.target.value })}
-                                >
+                                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" value={currentBlog.status || "Draft"} onChange={(e) => setCurrentBlog({ ...currentBlog, status: e.target.value })}>
                                     <option value="Draft">Draft</option>
                                     <option value="Published">Published</option>
                                 </select>
                             </div>
                             <div className="space-y-2 col-span-2">
                                 <label className="text-sm font-medium">Excerpt (Short Description)</label>
-                                <Textarea
-                                    value={currentBlog.excerpt || ""}
-                                    className="min-h-[80px]"
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, excerpt: e.target.value })}
-                                />
+                                <Textarea value={currentBlog.excerpt || ""} className="min-h-[80px]" onChange={(e) => setCurrentBlog({ ...currentBlog, excerpt: e.target.value })} />
                             </div>
                             <div className="space-y-2 col-span-2">
                                 <label className="text-sm font-medium">Full Content</label>
-                                <Textarea
-                                    value={currentBlog.content || ""}
-                                    className="min-h-[200px]"
-                                    placeholder="Write your blog content here..."
-                                    onChange={(e) => setCurrentBlog({ ...currentBlog, content: e.target.value })}
-                                />
+                                <Textarea value={currentBlog.content || ""} className="min-h-[200px]" placeholder="Write your blog content here..." onChange={(e) => setCurrentBlog({ ...currentBlog, content: e.target.value })} />
                             </div>
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={handleSave} disabled={saving}>
-                                {saving ? "Saving..." : "Save"}
-                            </Button>
+                            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -219,9 +147,7 @@ export default function AdminBlogs() {
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <CardTitle>All Blog Posts</CardTitle>
-                        <div className="w-1/3">
-                            <Input placeholder="Search blogs..." />
-                        </div>
+                        <div className="w-1/3"><Input placeholder="Search blogs..." /></div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -231,7 +157,8 @@ export default function AdminBlogs() {
                         <div className="relative w-full overflow-auto">
                             <table className="w-full caption-bottom text-sm">
                                 <thead className="[&_tr]:border-b">
-                                    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                    <tr className="border-b transition-colors hover:bg-muted/50">
+                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Media</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Title</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Category</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
@@ -241,13 +168,10 @@ export default function AdminBlogs() {
                                 </thead>
                                 <tbody className="[&_tr:last-child]:border-0">
                                     {blogs.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="text-center py-10 text-muted-foreground">
-                                                No blogs found.
-                                            </td>
-                                        </tr>
+                                        <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">No blogs found.</td></tr>
                                     ) : blogs.map((blog) => (
-                                        <tr key={blog.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                        <tr key={blog.id} className="border-b transition-colors hover:bg-muted/50">
+                                            <td className="p-4 align-middle"><MediaThumbnail url={blog.image_url || ""} alt={blog.title} /></td>
                                             <td className="p-4 align-middle font-medium truncate max-w-[200px]" title={blog.title}>{blog.title}</td>
                                             <td className="p-4 align-middle">{blog.category || '-'}</td>
                                             <td className="p-4 align-middle">{blog.date}</td>
@@ -258,12 +182,8 @@ export default function AdminBlogs() {
                                             </td>
                                             <td className="p-4 align-middle text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="icon" onClick={() => openEditDialog(blog)}>
-                                                        <Edit className="h-4 w-4 text-blue-500" />
-                                                    </Button>
-                                                    <Button variant="outline" size="icon" onClick={() => handleDelete(blog.id)}>
-                                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                                    </Button>
+                                                    <Button variant="outline" size="icon" onClick={() => openEditDialog(blog)}><Edit className="h-4 w-4 text-blue-500" /></Button>
+                                                    <Button variant="outline" size="icon" onClick={() => handleDelete(blog.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
                                                 </div>
                                             </td>
                                         </tr>
