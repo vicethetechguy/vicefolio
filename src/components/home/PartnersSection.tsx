@@ -33,7 +33,7 @@ export const PartnersSection = () => {
           {[...partners, ...partners].map((partner, index) => (
             <span
               key={index}
-              className="mx-8 md:mx-16 text-2xl md:text-3xl font-light text-muted-foreground/50 hover:text-foreground transition-colors cursor-default"
+              className="mx-8 md:mx-16 text-2xl md:text-3xl font-light text-foreground/60 hover:text-foreground transition-colors cursor-default"
             >
               {partner}
             </span>
