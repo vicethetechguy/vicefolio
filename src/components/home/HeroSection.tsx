@@ -1,7 +1,10 @@
 import { ArrowDown } from "lucide-react";
 import victorPortrait from "@/assets/victor-chime.png";
+import { useTexts } from "@/hooks/useTexts";
 
 export const HeroSection = () => {
+  const { getText } = useTexts();
+
   return (
     <section className="relative min-h-screen overflow-hidden">
       <div className="container-vice relative z-10">
@@ -13,7 +16,7 @@ export const HeroSection = () => {
               className="absolute left-0 top-24 hidden lg:block opacity-0 animate-[slideInLeft_0.8s_ease-out_0.2s_forwards]"
             >
               <span className="vertical-text text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Business Developer
+                {getText("hero_role", "Business Developer")}
               </span>
             </div>
 
@@ -22,12 +25,12 @@ export const HeroSection = () => {
               className="flex gap-12 mb-8 lg:mb-16 lg:ml-12 opacity-0 animate-[fadeUp_0.8s_ease-out_0.3s_forwards]"
             >
               <div>
-                <p className="stat-number">+200</p>
-                <p className="stat-label">Project completed</p>
+                <p className="stat-number">{getText("hero_stat_1_number", "+200")}</p>
+                <p className="stat-label">{getText("hero_stat_1_label", "Project completed")}</p>
               </div>
               <div>
-                <p className="stat-number">+50</p>
-                <p className="stat-label">Startup raised</p>
+                <p className="stat-number">{getText("hero_stat_2_number", "+50")}</p>
+                <p className="stat-label">{getText("hero_stat_2_label", "Startup raised")}</p>
               </div>
             </div>
 
@@ -35,9 +38,9 @@ export const HeroSection = () => {
             <div
               className="lg:ml-12 opacity-0 animate-[fadeUp_0.8s_ease-out_0.5s_forwards]"
             >
-              <h1 className="hero-headline mb-6">Hello</h1>
+              <h1 className="hero-headline mb-6">{getText("hero_greeting", "Hello")}</h1>
               <p className="text-lg md:text-xl text-muted-foreground font-light max-w-md">
-                — It's Victor Chime, a Tokenomist & Product Strategist.
+                {getText("hero_subtitle", "— It's Victor Chime, a Tokenomist & Product Strategist.")}
               </p>
             </div>
 
@@ -55,7 +58,7 @@ export const HeroSection = () => {
               style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
             >
               <span className="text-xs text-muted-foreground tracking-widest">
-                2026
+                {getText("hero_year", "2026")}
               </span>
             </div>
           </div>

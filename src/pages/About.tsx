@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
+import { useTexts } from "@/hooks/useTexts";
 import victorPortrait from "@/assets/victor-chime.png";
 import { supabase } from "@/lib/supabase";
 
@@ -15,6 +16,7 @@ const About = () => {
   const [heroRef, heroInView] = useInView({ threshold: 0.1 });
   const [storyRef, storyInView] = useInView({ threshold: 0.1 });
   const [valuesRef, valuesInView] = useInView({ threshold: 0.1 });
+  const { getText } = useTexts();
 
   const [values, setValues] = useState<ValueProp[]>([]);
   const [loadingValues, setLoadingValues] = useState(true);
@@ -52,13 +54,10 @@ const About = () => {
                 About Me
               </p>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-                Building the future of decentralized economies
+                {getText("about_hero_heading", "Building the future of decentralized economies")}
               </h1>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                I'm Victor Chime, a Business Developer and Tokenomist with 8+ years
-                of experience helping Web3 ventures achieve sustainable growth. My
-                approach combines rigorous economic modeling with practical go-to-market
-                execution.
+                {getText("about_hero_description", "I'm Victor Chime, a Business Developer and Tokenomist with 8+ years of experience helping Web3 ventures achieve sustainable growth. My approach combines rigorous economic modeling with practical go-to-market execution.")}
               </p>
             </div>
             <div className="relative">
@@ -85,24 +84,13 @@ const About = () => {
             </p>
             <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
               <p>
-                My journey into Web3 began in 2016 when I first encountered the
-                potential of blockchain technology to reshape financial systems.
-                Coming from a background in traditional finance and product management,
-                I saw an opportunity to bridge the gap between cutting-edge technology
-                and sustainable business models.
+                {getText("about_journey_p1", "My journey into Web3 began in 2016 when I first encountered the potential of blockchain technology to reshape financial systems. Coming from a background in traditional finance and product management, I saw an opportunity to bridge the gap between cutting-edge technology and sustainable business models.")}
               </p>
               <p>
-                Over the years, I've had the privilege of working with some of the
-                most innovative protocols in DeFi, NFTs, and Layer 2 scaling solutions.
-                Each project has reinforced my belief that successful tokenomics isn't
-                just about mathematical models—it's about understanding human behavior,
-                market dynamics, and long-term value creation.
+                {getText("about_journey_p2", "Over the years, I've had the privilege of working with some of the most innovative protocols in DeFi, NFTs, and Layer 2 scaling solutions. Each project has reinforced my belief that successful tokenomics isn't just about mathematical models—it's about understanding human behavior, market dynamics, and long-term value creation.")}
               </p>
               <p>
-                Today, I focus on helping founders and protocol teams navigate the
-                complexities of token design, go-to-market strategy, and ecosystem
-                development. My goal is simple: to help build ventures that create
-                lasting value for all stakeholders.
+                {getText("about_journey_p3", "Today, I focus on helping founders and protocol teams navigate the complexities of token design, go-to-market strategy, and ecosystem development. My goal is simple: to help build ventures that create lasting value for all stakeholders.")}
               </p>
             </div>
           </div>
@@ -121,7 +109,7 @@ const About = () => {
               Core Values
             </p>
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-16">
-              Principles that guide my work
+              {getText("about_values_heading", "Principles that guide my work")}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">

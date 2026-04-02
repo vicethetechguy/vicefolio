@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
+import { useTexts } from "@/hooks/useTexts";
 import { ArrowUpRight, Check, Coins, Rocket, BarChart3, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -21,10 +22,6 @@ const iconMap: Record<string, any> = {
   Users: Users,
 };
 
-/**
- * Individual service card — extracted so useInView hook is called
- * at the component top level (not inside a loop).
- */
 function ServiceCard({ service, index }: { service: Service; index: number }) {
   const [ref, inView] = useInView({ threshold: 0.1 });
   const IconComponent = iconMap[service.icon] || Rocket;
@@ -70,6 +67,7 @@ const Services = () => {
   const [headerRef, headerInView] = useInView({ threshold: 0.1 });
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getText } = useTexts();
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -104,11 +102,10 @@ const Services = () => {
               Services
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-              Strategic expertise for ambitious Web3 ventures
+              {getText("services_heading", "Strategic expertise for ambitious Web3 ventures")}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              From tokenomics architecture to go-to-market execution, I provide
-              comprehensive strategic support to help your project succeed.
+              {getText("services_description", "From tokenomics architecture to go-to-market execution, I provide comprehensive strategic support to help your project succeed.")}
             </p>
           </div>
         </div>
@@ -139,10 +136,10 @@ const Services = () => {
       <section className="section-padding bg-foreground text-background">
         <div className="container-vice text-center">
           <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-8">
-            Ready to get started?
+            {getText("services_cta_heading", "Ready to get started?")}
           </h2>
           <p className="text-lg text-background/70 mb-12 max-w-xl mx-auto">
-            Book a free consultation to discuss your project and how I can help.
+            {getText("services_cta_description", "Book a free consultation to discuss your project and how I can help.")}
           </p>
           <Link
             to="/booking"

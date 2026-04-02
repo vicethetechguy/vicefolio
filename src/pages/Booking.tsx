@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
+import { useTexts } from "@/hooks/useTexts";
 import { useState } from "react";
 import { Calendar, Clock, ChevronRight, Check } from "lucide-react";
 
@@ -30,6 +31,7 @@ const timeSlots = [
 
 const Booking = () => {
   const [headerRef, headerInView] = useInView({ threshold: 0.1 });
+  const { getText } = useTexts();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     projectType: "",
@@ -52,7 +54,6 @@ const Booking = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
     setStep(4);
   };
 
@@ -68,13 +69,13 @@ const Booking = () => {
             }`}
           >
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-              Book a Call
+              {getText("booking_label", "Book a Call")}
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-              Let's discuss your project
+              {getText("booking_heading", "Let's discuss your project")}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Schedule a free 30-minute consultation to explore how we can work together.
+              {getText("booking_description", "Schedule a free 30-minute consultation to explore how we can work together.")}
             </p>
           </div>
         </div>
@@ -90,7 +91,7 @@ const Booking = () => {
                 <div
                   className={`w-10 h-10 flex items-center justify-center border transition-all ${
                     step >= s
-                      ? "bg-foreground text-background border-foreground"
+                      ? "bg-foreground text-background border-foreground shadow-lg scale-110"
                       : "border-border text-muted-foreground"
                   }`}
                 >
@@ -111,14 +112,14 @@ const Booking = () => {
             <div className="space-y-12 animate-[fadeIn_0.3s_ease-out]">
               <div>
                 <h2 className="text-2xl font-light mb-6">
-                  What type of project are you working on?
+                   {getText("booking_step1_title", "What type of project are you working on?")}
                 </h2>
                 <div className="grid grid-cols-1 gap-3">
                   {projectTypes.map((type) => (
                     <button
                       key={type}
                       onClick={() => setFormData({ ...formData, projectType: type })}
-                      className={`p-4 border text-left transition-all ${
+                      className={`p-4 border text-left transition-all rounded-2xl ${
                         formData.projectType === type
                           ? "border-foreground bg-secondary"
                           : "border-border hover:border-foreground"
@@ -132,16 +133,16 @@ const Booking = () => {
 
               <div>
                 <h2 className="text-2xl font-light mb-6">
-                  What's your estimated budget?
+                  {getText("booking_step1_subtitle", "What's your estimated budget?")}
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
                   {budgetRanges.map((range) => (
                     <button
                       key={range}
                       onClick={() => setFormData({ ...formData, budget: range })}
-                      className={`p-4 border text-center transition-all ${
+                      className={`p-4 border text-center transition-all rounded-2xl ${
                         formData.budget === range
-                          ? "border-foreground bg-secondary"
+                          ? "border-foreground bg-secondary font-medium"
                           : "border-border hover:border-foreground"
                       }`}
                     >
@@ -154,7 +155,7 @@ const Booking = () => {
               <button
                 onClick={handleNext}
                 disabled={!formData.projectType || !formData.budget}
-                className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-4 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-4 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity rounded-2xl font-medium"
               >
                 Continue
                 <ChevronRight className="w-4 h-4" />
@@ -167,7 +168,7 @@ const Booking = () => {
               <div>
                 <h2 className="text-2xl font-light mb-6 flex items-center gap-3">
                   <Calendar className="w-6 h-6" />
-                  Select a date
+                  {getText("booking_step2_title", "Select a date")}
                 </h2>
                 <div className="grid grid-cols-7 gap-2">
                   {Array.from({ length: 14 }).map((_, i) => {
@@ -181,14 +182,14 @@ const Booking = () => {
                       <button
                         key={dateStr}
                         onClick={() => setFormData({ ...formData, date: dateStr })}
-                        className={`p-3 border text-center transition-all ${
+                        className={`p-3 border text-center transition-all rounded-2xl ${
                           formData.date === dateStr
                             ? "border-foreground bg-secondary"
                             : "border-border hover:border-foreground"
                         }`}
                       >
-                        <p className="text-xs text-muted-foreground">{dayName}</p>
-                        <p className="text-lg">{dayNum}</p>
+                        <p className="text-xs text-muted-foreground font-medium uppercase">{dayName}</p>
+                        <p className="text-lg font-light">{dayNum}</p>
                       </button>
                     );
                   })}
@@ -198,16 +199,16 @@ const Booking = () => {
               <div>
                 <h2 className="text-2xl font-light mb-6 flex items-center gap-3">
                   <Clock className="w-6 h-6" />
-                  Select a time
+                  {getText("booking_step2_subtitle", "Select a time")}
                 </h2>
                 <div className="grid grid-cols-4 gap-3">
                   {timeSlots.map((time) => (
                     <button
                       key={time}
                       onClick={() => setFormData({ ...formData, time })}
-                      className={`p-3 border text-center transition-all ${
+                      className={`p-3 border text-center transition-all rounded-2xl ${
                         formData.time === time
-                          ? "border-foreground bg-secondary"
+                          ? "border-foreground bg-secondary font-medium"
                           : "border-border hover:border-foreground"
                       }`}
                     >
@@ -220,14 +221,14 @@ const Booking = () => {
               <div className="flex gap-4">
                 <button
                   onClick={handleBack}
-                  className="flex-1 border border-foreground py-4 hover:bg-secondary transition-colors"
+                  className="flex-1 border border-foreground py-4 hover:bg-secondary transition-colors rounded-2xl font-medium"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={!formData.date || !formData.time}
-                  className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-4 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                  className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-4 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity rounded-2xl font-medium"
                 >
                   Continue
                   <ChevronRight className="w-4 h-4" />
@@ -240,44 +241,44 @@ const Booking = () => {
             <form onSubmit={handleSubmit} className="space-y-8 animate-[fadeIn_0.3s_ease-out]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm mb-2">Name *</label>
+                  <label className="block text-sm mb-2 font-medium">Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors"
+                    className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors rounded-2xl"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-2">Email *</label>
+                  <label className="block text-sm mb-2 font-medium">Email *</label>
                   <input
                     type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors"
+                    className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors rounded-2xl"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm mb-2">Company / Protocol</label>
+                <label className="block text-sm mb-2 font-medium">Company / Protocol</label>
                 <input
                   type="text"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors"
+                  className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors rounded-2xl"
                 />
               </div>
 
               <div>
-                <label className="block text-sm mb-2">Tell me about your project</label>
+                <label className="block text-sm mb-2 font-medium">Tell me about your project</label>
                 <textarea
                   rows={4}
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors resize-none"
+                  className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors resize-none rounded-2xl"
                 />
               </div>
 
@@ -285,13 +286,13 @@ const Booking = () => {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex-1 border border-foreground py-4 hover:bg-secondary transition-colors"
+                  className="flex-1 border border-foreground py-4 hover:bg-secondary transition-colors rounded-2xl font-medium"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-foreground text-background py-4 hover:opacity-90 transition-opacity"
+                  className="flex-1 bg-foreground text-background py-4 hover:opacity-90 transition-opacity rounded-2xl font-medium shadow-lg"
                 >
                   Confirm Booking
                 </button>
@@ -301,16 +302,16 @@ const Booking = () => {
 
           {step === 4 && (
             <div className="text-center py-16 animate-[fadeIn_0.3s_ease-out]">
-              <div className="w-16 h-16 bg-foreground text-background flex items-center justify-center mx-auto mb-8">
+              <div className="w-16 h-16 bg-foreground text-background flex items-center justify-center mx-auto mb-8 rounded-full shadow-lg">
                 <Check className="w-8 h-8" />
               </div>
-              <h2 className="text-3xl font-light mb-4">Booking Confirmed!</h2>
-              <p className="text-muted-foreground mb-8">
-                You'll receive a confirmation email shortly with the meeting details.
+              <h2 className="text-3xl font-light mb-4">{getText("booking_success_title", "Booking Confirmed!")}</h2>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+                {getText("booking_success_msg", "You'll receive a confirmation email shortly with the meeting details.")}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <div className="inline-block px-6 py-4 bg-secondary rounded-2xl text-foreground font-medium border border-border">
                 {formData.date} at {formData.time}
-              </p>
+              </div>
             </div>
           )}
         </div>

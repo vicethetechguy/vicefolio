@@ -1,9 +1,11 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useInView } from "@/hooks/useInView";
+import { useTexts } from "@/hooks/useTexts";
 
 export const CTASection = () => {
   const [containerRef, inView] = useInView({ threshold: 0.1 });
+  const { getText } = useTexts();
 
   return (
     <section className="section-padding">
@@ -15,11 +17,10 @@ export const CTASection = () => {
           }`}
         >
           <h2 className="text-4xl md:text-5xl lg:text-7xl font-light tracking-tight mb-8">
-            Ready to build something extraordinary?
+            {getText("home_cta_heading", "Ready to build something extraordinary?")}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Let's discuss how strategic tokenomics and product leadership can
-            accelerate your Web3 venture.
+            {getText("home_cta_description", "Let's discuss how strategic tokenomics and product leadership can accelerate your Web3 venture.")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

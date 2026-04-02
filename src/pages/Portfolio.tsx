@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
 import { Link } from "react-router-dom";
+import { useTexts } from "@/hooks/useTexts";
 import { supabase } from "@/lib/supabase";
 
 interface PortfolioProject {
@@ -19,6 +20,7 @@ const Portfolio = () => {
   const [gridRef, gridInView] = useInView({ threshold: 0.05 });
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getText } = useTexts();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -52,11 +54,10 @@ const Portfolio = () => {
               Portfolio
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-              Selected case studies
+              {getText("portfolio_heading", "Selected case studies")}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              A collection of projects showcasing tokenomics design, go-to-market
-              strategy, and ecosystem development across the Web3 landscape.
+              {getText("portfolio_description", "A collection of projects showcasing tokenomics design, go-to-market strategy, and ecosystem development across the Web3 landscape.")}
             </p>
           </div>
         </div>

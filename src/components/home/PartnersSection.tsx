@@ -1,4 +1,5 @@
 import { useInView } from "@/hooks/useInView";
+import { useTexts } from "@/hooks/useTexts";
 
 const partners = [
   "Polygon",
@@ -13,6 +14,7 @@ const partners = [
 
 export const PartnersSection = () => {
   const [containerRef, inView] = useInView({ threshold: 0.1 });
+  const { getText } = useTexts();
 
   return (
     <section className="py-16 md:py-24 border-y border-border overflow-hidden">
@@ -23,7 +25,7 @@ export const PartnersSection = () => {
         }`}
       >
         <p className="text-xs uppercase tracking-widest text-muted-foreground text-center">
-          Trusted by Industry Leaders
+           {getText("home_partners_label", "Trusted by Industry Leaders")}
         </p>
       </div>
 

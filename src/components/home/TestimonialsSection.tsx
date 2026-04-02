@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { useInView } from "@/hooks/useInView";
+import { useTexts } from "@/hooks/useTexts";
 
 const testimonials = [
   {
@@ -26,6 +27,7 @@ const testimonials = [
 export const TestimonialsSection = () => {
   const [current, setCurrent] = useState(0);
   const [containerRef, inView] = useInView({ threshold: 0.1 });
+  const { getText } = useTexts();
 
   const next = () => setCurrent((prev) => (prev + 1) % testimonials.length);
   const prev = () =>
@@ -41,7 +43,7 @@ export const TestimonialsSection = () => {
           }`}
         >
           <p className="text-xs uppercase tracking-widest text-background/60 mb-12 text-center">
-            Client Testimonials
+            {getText("home_testimonials_label", "Client Testimonials")}
           </p>
 
           <div className="relative">
@@ -49,7 +51,7 @@ export const TestimonialsSection = () => {
 
             <blockquote
               key={current}
-              className="text-2xl md:text-3xl lg:text-4xl font-light leading-relaxed text-center mb-12 animate-[fadeIn_0.5s_ease-out]"
+              className="text-2xl md:text-3xl lg:text-4xl font-light leading-relaxed text-center mb-12 animate-[fadeIn_0.5s_ease-out] text-background"
             >
               "{testimonials[current].quote}"
             </blockquote>
@@ -58,7 +60,7 @@ export const TestimonialsSection = () => {
               key={`author-${current}`}
               className="text-center animate-[fadeIn_0.5s_ease-out_0.2s_both]"
             >
-              <p className="text-lg font-medium">{testimonials[current].author}</p>
+              <p className="text-lg font-medium text-background">{testimonials[current].author}</p>
               <p className="text-background/60 text-sm">
                 {testimonials[current].role}
               </p>

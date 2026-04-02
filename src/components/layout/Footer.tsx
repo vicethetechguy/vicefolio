@@ -1,22 +1,25 @@
 import { Link } from "react-router-dom";
 import { Linkedin, Twitter, Github, Mail } from "lucide-react";
-
-const footerLinks = [
-  { name: "About", path: "/about" },
-  { name: "Portfolio", path: "/portfolio" },
-  { name: "Services", path: "/services" },
-  { name: "Blog", path: "/blog" },
-  { name: "Contact", path: "/contact" },
-];
-
-const socialLinks = [
-  { name: "LinkedIn", icon: Linkedin, url: "https://linkedin.com" },
-  { name: "Twitter", icon: Twitter, url: "https://twitter.com" },
-  { name: "GitHub", icon: Github, url: "https://github.com" },
-  { name: "Email", icon: Mail, url: "mailto:hello@victorchime.com" },
-];
+import { useTexts } from "@/hooks/useTexts";
 
 export const Footer = () => {
+  const { getText } = useTexts();
+
+  const footerLinks = [
+    { name: "About", path: "/about" },
+    { name: "Portfolio", path: "/portfolio" },
+    { name: "Services", path: "/services" },
+    { name: "Blog", path: "/blog" },
+    { name: "Contact", path: "/contact" },
+  ];
+
+  const socialLinks = [
+    { name: "LinkedIn", icon: Linkedin, url: getText("footer_linkedin_url", "https://linkedin.com") },
+    { name: "Twitter", icon: Twitter, url: getText("footer_twitter_url", "https://twitter.com") },
+    { name: "GitHub", icon: Github, url: getText("footer_github_url", "https://github.com") },
+    { name: "Email", icon: Mail, url: getText("footer_email", "mailto:hello@victorchime.com") },
+  ];
+
   return (
     <footer className="border-t border-border bg-background">
       <div className="container-vice py-16 md:py-24">
@@ -45,14 +48,13 @@ export const Footer = () => {
               </svg>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">
-              Transforming ambitious ideas into successful Web3 ventures through
-              strategic tokenomics and product leadership.
+              {getText("footer_tagline", "Transforming ambitious ideas into successful Web3 ventures through strategic tokenomics and product leadership.")}
             </p>
           </div>
 
           {/* Navigation */}
           <div className="md:col-span-4">
-            <h4 className="text-xs uppercase tracking-widest text-muted-foreground mb-6">
+            <h4 className="text-xs uppercase tracking-widest text-muted-foreground mb-6 font-medium">
               Navigation
             </h4>
             <ul className="space-y-3">
@@ -60,7 +62,7 @@ export const Footer = () => {
                 <li key={link.path}>
                   <Link
                     to={link.path}
-                    className="text-sm text-foreground hover:text-muted-foreground transition-colors"
+                    className="text-sm text-foreground hover:text-muted-foreground transition-colors font-light"
                   >
                     {link.name}
                   </Link>
@@ -71,7 +73,7 @@ export const Footer = () => {
 
           {/* Social */}
           <div className="md:col-span-4">
-            <h4 className="text-xs uppercase tracking-widest text-muted-foreground mb-6">
+            <h4 className="text-xs uppercase tracking-widest text-muted-foreground mb-6 font-medium">
               Connect
             </h4>
             <div className="flex gap-4">
@@ -81,7 +83,7 @@ export const Footer = () => {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-all"
+                  className="w-10 h-10 border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-all rounded-2xl"
                   aria-label={social.name}
                 >
                   <social.icon className="w-4 h-4" />
@@ -93,19 +95,19 @@ export const Footer = () => {
 
         {/* Bottom */}
         <div className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Victor Chime. All rights reserved.
+          <p className="text-xs text-muted-foreground font-light">
+            © {new Date().getFullYear()} {getText("footer_copyright_name", "Victor Chime")}. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link
               to="/privacy"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors font-light"
             >
               Privacy Policy
             </Link>
             <Link
               to="/terms"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors font-light"
             >
               Terms of Service
             </Link>

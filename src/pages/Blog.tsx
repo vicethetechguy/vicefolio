@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTexts } from "@/hooks/useTexts";
 import { supabase } from "@/lib/supabase";
 
 interface BlogPost {
@@ -19,6 +20,7 @@ const Blog = () => {
   const [gridRef, gridInView] = useInView({ threshold: 0.05 });
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getText } = useTexts();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -53,11 +55,10 @@ const Blog = () => {
               Blog
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-              Insights & Analysis
+              {getText("blog_heading", "Insights & Analysis")}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              Thoughts on tokenomics, Web3 strategy, and building sustainable
-              decentralized systems.
+              {getText("blog_description", "Thoughts on tokenomics, Web3 strategy, and building sustainable decentralized systems.")}
             </p>
           </div>
         </div>

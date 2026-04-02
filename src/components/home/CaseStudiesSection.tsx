@@ -1,41 +1,40 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useInView } from "@/hooks/useInView";
+import { useTexts } from "@/hooks/useTexts";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
-const caseStudies = [
-  {
-    title: "DeFi Protocol Launch",
-    category: "Tokenomics",
-    metric: "$42M TVL",
-    description: "Designed tokenomics for a lending protocol achieving $42M TVL in 3 months.",
-    slug: "defi-protocol",
-  },
-  {
-    title: "NFT Marketplace GTM",
-    category: "Go-to-Market",
-    metric: "180K Users",
-    description: "Led go-to-market strategy resulting in 180K users within the first quarter.",
-    slug: "nft-marketplace",
-  },
-  {
-    title: "L2 Ecosystem Growth",
-    category: "Business Development",
-    metric: "+340%",
-    description: "Expanded ecosystem partnerships driving 340% growth in developer activity.",
-    slug: "l2-ecosystem",
-  },
-  {
-    title: "DAO Governance Design",
-    category: "Product Strategy",
-    metric: "95% Pass Rate",
-    description: "Architected governance framework achieving 95% proposal pass rate.",
-    slug: "dao-governance",
-  },
-];
+interface CaseStudy {
+  title: string;
+  category: string;
+  metric: string;
+  description: string;
+  slug: string;
+}
 
 export const CaseStudiesSection = () => {
   const [headerRef, headerInView] = useInView({ threshold: 0.1 });
   const [gridRef, gridInView] = useInView({ threshold: 0.1 });
+  const { getText } = useTexts();
+  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      const { data, error } = await supabase
+        .from("portfolio_projects")
+        .select("*")
+        .limit(4)
+        .order("year", { ascending: false });
+
+      if (!error && data) {
+        setCaseStudies(data);
+      }
+      setLoading(false);
+    };
+    fetchLatest();
+  }, []);
 
   return (
     <section className="section-padding">
@@ -49,10 +48,10 @@ export const CaseStudiesSection = () => {
         >
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-              Selected Work
+              {getText("home_cases_label", "Selected Work")}
             </p>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight">
-              Case Studies
+              {getText("home_cases_heading", "Case Studies")}
             </h2>
           </div>
           <Link
@@ -66,7 +65,9 @@ export const CaseStudiesSection = () => {
 
         {/* Case Studies Grid */}
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          {caseStudies.map((study, index) => (
+          {loading ? (
+            <div className="col-span-2 text-center py-10 text-muted-foreground">Loading projects...</div>
+          ) : caseStudies.map((study, index) => (
             <article
               key={study.slug}
               className={`transition-all duration-700 ${
@@ -76,8 +77,12 @@ export const CaseStudiesSection = () => {
             >
               <Link to={`/portfolio/${study.slug}`} className="group block">
                 {/* Image Placeholder */}
-                <div className="aspect-[4/3] bg-secondary mb-6 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-vice-200 to-vice-300 group-hover:scale-105 transition-transform duration-500" />
+                <div className="aspect-[4/3] bg-secondary mb-6 overflow-hidden relative rounded-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-vice-200 to-vice-300 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
+                    <span className="text-6xl font-extralight text-vice-400 opacity-40">
+                      {study.metric}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Content */}
@@ -86,14 +91,14 @@ export const CaseStudiesSection = () => {
                     <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                       {study.category}
                     </p>
-                    <h3 className="text-xl md:text-2xl font-light mb-2 group-hover:underline underline-offset-4">
+                    <h3 className="text-xl md:text-2xl font-light mb-2 group-hover:underline underline-offset-4 text-foreground">
                       {study.title}
                     </h3>
                     <p className="text-muted-foreground text-sm max-w-sm">
                       {study.description}
                     </p>
                   </div>
-                  <span className="text-3xl md:text-4xl font-light text-muted-foreground">
+                  <span className="text-3xl md:text-4xl font-light text-foreground/40">
                     {study.metric}
                   </span>
                 </div>
