@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
 
 interface TextsContextType {
     texts: Record<string, string>;
@@ -10,7 +11,6 @@ interface TextsContextType {
 const TextsContext = createContext<TextsContextType | undefined>(undefined);
 
 export function TextsProvider({ children }: { children: ReactNode }) {
-    // Try to initialize from localStorage for instant perceived load
     const [texts, setTexts] = useState<Record<string, string>>(() => {
         try {
             const cached = localStorage.getItem("vice_text_config");
@@ -20,6 +20,7 @@ export function TextsProvider({ children }: { children: ReactNode }) {
         }
     });
     const [loading, setLoading] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
         const fetchTexts = async () => {
@@ -31,26 +32,44 @@ export function TextsProvider({ children }: { children: ReactNode }) {
                         map[row.id] = row.value;
                     });
                     setTexts(map);
-                    // Update cache for next time
                     localStorage.setItem("vice_text_config", JSON.stringify(map));
                 }
             } catch (err) {
                 console.error("Failed to fetch texts", err);
             } finally {
                 setLoading(false);
+                // We add a tiny 300ms delay to ensure React has finished rendering the first frame
+                setTimeout(() => setIsInitialized(true), 300);
             }
         };
         fetchTexts();
     }, []);
 
     const getText = (id: string, fallback: string) => {
-        // Always prioritize the live/cached state, then fallback
         return texts[id] || fallback;
     };
 
     return (
         <TextsContext.Provider value={{ texts, loading, getText }}>
-            {children}
+            {/* 
+                PREMIUM ENTRANCE: 
+                We hide the whole app until texts are confirmed to be loaded.
+                This prevents the "Flash of Old Text" entirely.
+            */}
+            {!isInitialized && (
+                <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center animate-[fadeIn_0.3s_ease-out]">
+                    <div className="relative">
+                        <div className="w-16 h-16 border-t-2 border-vice-500 rounded-full animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-vice-500">VC</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            <div className={`transition-opacity duration-700 ${isInitialized ? "opacity-100" : "opacity-0"}`}>
+                {children}
+            </div>
         </TextsContext.Provider>
     );
 }
