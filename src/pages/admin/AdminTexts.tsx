@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +13,6 @@ interface TextItem {
     value: string;
 }
 
-// ── Every editable text and media entry ──────────────────────
-
 const defaultTextSections: TextItem[] = [
     // ─── Homepage — Hero & Base ───
     { id: "hero_greeting", label: "🏠 Homepage — Greeting", value: "Hello" },
@@ -25,8 +23,6 @@ const defaultTextSections: TextItem[] = [
     { id: "hero_stat_2_number", label: "🏠 Homepage — Stat 2 Number", value: "+50" },
     { id: "hero_stat_2_label", label: "🏠 Homepage — Stat 2 Label", value: "Startup raised" },
     { id: "hero_year", label: "🏠 Homepage — Year Label", value: "2026" },
-
-    // ─── Homepage — Media ───
     { id: "media_hero_bg", label: "🖼️ Homepage — Hero Background (URL)", value: "" },
     { id: "media_showreel", label: "🖼️ Homepage — Video Showreel / Demo Reel (URL)", value: "" },
 
@@ -45,12 +41,10 @@ const defaultTextSections: TextItem[] = [
     // ─── About Me — Content ───
     { id: "about_hero_heading", label: "👤 About — Hero Heading", value: "Building the future of decentralized economies" },
     { id: "about_hero_description", label: "👤 About — Hero Description", value: "I'm Victor Chime, a Business Developer and Tokenomist with 8+ years of experience helping Web3 ventures achieve sustainable growth. My approach combines rigorous economic modeling with practical go-to-market execution." },
-    { id: "about_journey_p1", label: "👤 About — Journey Paragraph 1", value: "" },
-    { id: "about_journey_p2", label: "👤 About — Journey Paragraph 2", value: "" },
-    { id: "about_journey_p3", label: "👤 About — Journey Paragraph 3", value: "" },
+    { id: "about_journey_p1", label: "👤 About — Journey Paragraph 1", value: "My journey into Web3 began in 2016 when I first encountered the potential of blockchain technology to reshape financial systems." },
+    { id: "about_journey_p2", label: "👤 About — Journey Paragraph 2", value: "Over the years, I've had the privilege of working with some of the most innovative protocols in DeFi, NFTs, and Layer 2 scaling solutions." },
+    { id: "about_journey_p3", label: "👤 About — Journey Paragraph 3", value: "Today, I focus on helping founders and protocol teams navigate the complexities of token design, go-to-market strategy, and ecosystem development." },
     { id: "about_values_heading", label: "👤 About — Values Heading", value: "Principles that guide my work" },
-    
-    // ─── About Me — Media ───
     { id: "media_about_profile", label: "🖼️ About — Profile Photo / Intro Video (URL)", value: "" },
 
     // ─── Portfolio — Content ───
@@ -73,49 +67,29 @@ const defaultTextSections: TextItem[] = [
     { id: "calendly_custom", label: "📅 Booking — Other Session URL/Hub", value: "https://calendly.com/vicethetechguy" },
     { id: "booking_label", label: "📅 Booking — Label", value: "Book a Call" },
     { id: "booking_heading", label: "📅 Booking — Heading", value: "Let's discuss your project" },
-    { id: "booking_description", label: "📅 Booking — Description", value: "Schedule a free 30-minute consultation to explore how we can work together." },
-    { id: "booking_step1_title", label: "📅 Booking — Step 1 Title", value: "What type of project are you working on?" },
-    { id: "booking_step1_subtitle", label: "📅 Booking — Step 1 Subtitle", value: "What's your estimated budget?" },
-    { id: "booking_step2_title", label: "📅 Booking — Step 2 Title", value: "Select a date" },
-    { id: "booking_step2_subtitle", label: "📅 Booking — Step 2 Subtitle", value: "Select a time" },
-    { id: "booking_success_title", label: "📅 Booking — Success Title", value: "Booking Confirmed!" },
-    { id: "booking_success_msg", label: "📅 Booking — Success Message", value: "You'll receive a confirmation email shortly with the meeting details." },
 
     // ─── Contact — Content ───
     { id: "contact_label", label: "📬 Contact — Label", value: "Contact" },
     { id: "contact_heading", label: "📬 Contact — Heading", value: "Let's connect" },
-    { id: "contact_description", label: "📬 Contact — Description", value: "Have a question or want to discuss a potential project? I'd love to hear from you." },
-    { id: "contact_email_label", label: "📬 Contact — Email Label", value: "Email" },
     { id: "contact_email", label: "📬 Contact — Email Address", value: "hello@victorchime.com" },
-    { id: "contact_linkedin_label", label: "📬 Contact — LinkedIn Label", value: "LinkedIn" },
     { id: "contact_linkedin_url", label: "📬 Contact — LinkedIn URL", value: "https://linkedin.com" },
-    { id: "contact_twitter_label", label: "📬 Contact — Twitter Label", value: "Twitter/X" },
     { id: "contact_twitter_url", label: "📬 Contact — Twitter/X URL", value: "https://twitter.com" },
-    { id: "contact_twitter_handle", label: "📬 Contact — Twitter Handle text", value: "Follow @victorchime" },
-    { id: "contact_success_title", label: "📬 Contact — Success Title", value: "Message Sent!" },
-    { id: "contact_success_msg", label: "📬 Contact — Success Message", value: "Thank you for reaching out. I'll get back to you within 24-48 hours." },
 
     // ─── Footer — Content ───
-    { id: "footer_tagline", label: "🦶 Footer — Tagline", value: "Transforming ambitious ideas into successful Web3 ventures through strategic tokenomics and product leadership." },
+    { id: "footer_tagline", label: "🦶 Footer — Tagline", value: "Strategic tokenomics and product leadership for Web3." },
     { id: "footer_copyright_name", label: "🦶 Footer — Copyright Name", value: "Victor Chime" },
-    { id: "footer_linkedin_url", label: "🦶 Footer — LinkedIn URL", value: "https://linkedin.com" },
-    { id: "footer_twitter_url", label: "🦶 Footer — Twitter/X URL", value: "https://twitter.com" },
-    { id: "footer_github_url", label: "🦶 Footer — GitHub URL", value: "https://github.com" },
-    { id: "footer_email", label: "🦶 Footer — Email", value: "mailto:hello@victorchime.com" },
 ];
 
 export default function AdminTexts() {
     const [texts, setTexts] = useState<TextItem[]>([]);
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
+    const changedIds = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         const fetchData = async () => {
             const { data, error } = await supabase.from("texts").select("*");
-            if (error) {
-                console.error("Error fetching texts:", error);
-                setTexts(defaultTextSections);
-            } else if (data && data.length > 0) {
+            if (!error && data && data.length > 0) {
                 const merged = defaultTextSections.map((def) => {
                     const found = data.find((d) => d.id === def.id);
                     return found ? { ...def, value: found.value } : def;
@@ -129,24 +103,35 @@ export default function AdminTexts() {
         fetchData();
     }, []);
 
+    const handleChange = (id: string, value: string) => {
+        setTexts(prev => prev.map(t => t.id === id ? { ...t, value } : t));
+        changedIds.current.add(id);
+    };
+
     const handleSave = async () => {
+        if (changedIds.current.size === 0) {
+            toast.info("No changes to save");
+            return;
+        }
+
         setSaving(true);
+        const toSave = texts.filter(t => changedIds.current.has(t.id));
+        
         const { error } = await supabase.from("texts").upsert(
-            texts.map((t) => ({ id: t.id, label: t.label, value: t.value }))
+            toSave.map((t) => ({ id: t.id, label: t.label, value: t.value }))
         );
         
         if (error) {
             console.error("Error saving content:", error);
-            toast.error("Failed to save changes. Please check your connection.");
+            toast.error("Failed to save changes.");
         } else {
-            toast.success("All changes saved successfully");
+            toast.success(`Saved ${toSave.length} item(s) successfully`);
+            changedIds.current.clear();
         }
         setSaving(false);
     };
 
-    if (loading) {
-        return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
-    }
+    if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
     const groups: Record<string, TextItem[]> = {};
     const groupOrder: string[] = [];
@@ -165,9 +150,9 @@ export default function AdminTexts() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Global Content Config</h2>
-                    <p className="text-muted-foreground mt-2">Manage all text and site-wide media URLs from one dashboard.</p>
+                    <p className="text-muted-foreground mt-2">Managing only changed items for faster performance.</p>
                 </div>
-                <Button onClick={handleSave} disabled={saving} className="bg-vice-500 hover:bg-vice-600">
+                <Button onClick={handleSave} disabled={saving} className="bg-vice-500 hover:bg-vice-600 font-semibold px-8">
                     {saving ? "Saving..." : "Save All Changes"}
                 </Button>
             </div>
@@ -180,48 +165,22 @@ export default function AdminTexts() {
                         </h3>
                         <div className="space-y-4">
                             {groups[group].map((text) => {
-                                const globalIndex = texts.findIndex((t) => t.id === text.id);
-                                const shortLabel = text.label.replace(/^.*? — /, "");
                                 const isMedia = text.id.startsWith("media_");
-                                const isLong = text.value.length > 80 || text.id.includes("paragraph") || text.id.includes("description") || text.id.includes("journey") || text.id.includes("tagline");
+                                const isLong = text.value.length > 80 || text.id.includes("paragraph") || text.id.includes("description") || text.id.includes("journey");
 
                                 return (
-                                    <Card key={text.id} className="border-border/50">
+                                    <Card key={text.id} className={`border-border/50 transition-all ${changedIds.current.has(text.id) ? "border-vice-400 ring-1 ring-vice-400/20" : ""}`}>
                                         <CardHeader className="pb-2">
-                                            <CardTitle className="text-base font-medium">{shortLabel}</CardTitle>
-                                            <CardDescription className="text-[10px] uppercase opacity-50">{text.id}</CardDescription>
+                                            <CardTitle className="text-base font-medium">{text.label.replace(/^.*? — /, "")}</CardTitle>
+                                            <CardDescription className="text-[10px] uppercase opacity-30">{text.id}</CardDescription>
                                         </CardHeader>
                                         <CardContent>
                                             {isMedia ? (
-                                                <MediaUploader
-                                                    value={text.value}
-                                                    onChange={(url) => {
-                                                        const updated = [...texts];
-                                                        updated[globalIndex].value = url;
-                                                        setTexts(updated);
-                                                    }}
-                                                    label=""
-                                                />
+                                                <MediaUploader value={text.value} onChange={(url) => handleChange(text.id, url)} label="" />
                                             ) : isLong ? (
-                                                <Textarea
-                                                    className="min-h-[120px] bg-secondary/30"
-                                                    value={text.value}
-                                                    onChange={(e) => {
-                                                        const updated = [...texts];
-                                                        updated[globalIndex].value = e.target.value;
-                                                        setTexts(updated);
-                                                    }}
-                                                />
+                                                <Textarea className="min-h-[120px] bg-secondary/30 focus:bg-secondary/50 border-none transition-all" value={text.value} onChange={(e) => handleChange(text.id, e.target.value)} />
                                             ) : (
-                                                <Input
-                                                    className="bg-secondary/30"
-                                                    value={text.value}
-                                                    onChange={(e) => {
-                                                        const updated = [...texts];
-                                                        updated[globalIndex].value = e.target.value;
-                                                        setTexts(updated);
-                                                    }}
-                                                />
+                                                <Input className="bg-secondary/30 focus:bg-secondary/50 border-none transition-all" value={text.value} onChange={(e) => handleChange(text.id, e.target.value)} />
                                             )}
                                         </CardContent>
                                     </Card>
