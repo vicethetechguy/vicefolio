@@ -6,7 +6,8 @@ import {
   Type,
   Image as ImageIcon,
   LogOut,
-  Loader2
+  Loader2,
+  Calendar
 } from "lucide-react";
 import { User, Briefcase, BarChart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,7 @@ export default function AdminLayout() {
 
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Meetings", href: "/admin/meetings", icon: Calendar },
     { name: "Portfolio", href: "/admin/portfolio", icon: Briefcase },
     { name: "Services", href: "/admin/services", icon: BarChart },
     { name: "About Me", href: "/admin/about", icon: User },
