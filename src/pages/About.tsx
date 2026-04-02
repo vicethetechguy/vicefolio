@@ -4,6 +4,7 @@ import { useInView } from "@/hooks/useInView";
 import { useTexts } from "@/hooks/useTexts";
 import victorPortrait from "@/assets/victor-chime.png";
 import { supabase } from "@/lib/supabase";
+import { MediaCarousel } from "@/components/MediaCarousel";
 
 interface ValueProp {
   id: string;
@@ -61,22 +62,11 @@ const About = () => {
               </p>
             </div>
             <div className="relative">
-              {getText("media_about_profile", "") ? (
-                getText("media_about_profile", "").match(/\.(mp4|webm|ogg)$/i) ? (
-                  <video 
-                    src={getText("media_about_profile", "")} 
-                    autoPlay 
-                    loop 
-                    muted 
-                    className="w-full aspect-[3/4] object-cover grayscale rounded-2xl"
-                  />
-                ) : (
-                  <img
-                    src={getText("media_about_profile", "")}
-                    alt="Victor Chime"
-                    className="w-full aspect-[3/4] object-cover grayscale rounded-2xl"
-                  />
-                )
+              {getText("gallery_about_profile", "") ? (
+                <MediaCarousel 
+                  value={getText("gallery_about_profile", "")} 
+                  itemClassName="w-full aspect-[3/4] object-cover grayscale rounded-2xl"
+                />
               ) : (
                 <img
                   src={victorPortrait}

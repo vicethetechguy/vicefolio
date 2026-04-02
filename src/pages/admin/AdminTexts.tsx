@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { MediaUploader } from "@/components/ui/media-uploader";
+import { MediaGalleryUploader } from "@/components/ui/media-gallery-uploader";
 
 interface TextItem {
     id: string;
@@ -23,8 +24,9 @@ const defaultTextSections: TextItem[] = [
     { id: "hero_stat_2_number", label: "🏠 Homepage — Stat 2 Number", value: "+50" },
     { id: "hero_stat_2_label", label: "🏠 Homepage — Stat 2 Label", value: "Startup raised" },
     { id: "hero_year", label: "🏠 Homepage — Year Label", value: "2026" },
-    { id: "media_hero_bg", label: "🖼️ Homepage — Hero Background (URL)", value: "" },
-    { id: "media_showreel", label: "🖼️ Homepage — Video Showreel / Demo Reel (URL)", value: "" },
+    { id: "gallery_hero_bg", label: "🖼️ Homepage — Hero Gallery (Multiple Images/Videos)", value: "" },
+    { id: "gallery_showreel", label: "🖼️ Homepage — Video Showreel / Demo Reel (Gallery)", value: "" },
+    { id: "gallery_general", label: "🖼️ Site — General Gallery Section", value: "" },
 
     // ─── Homepage — Sections ───
     { id: "home_services_label", label: "🏠 Homepage — Services Label", value: "Services" },
@@ -45,7 +47,7 @@ const defaultTextSections: TextItem[] = [
     { id: "about_journey_p2", label: "👤 About — Journey Paragraph 2", value: "Over the years, I've had the privilege of working with some of the most innovative protocols in DeFi, NFTs, and Layer 2 scaling solutions." },
     { id: "about_journey_p3", label: "👤 About — Journey Paragraph 3", value: "Today, I focus on helping founders and protocol teams navigate the complexities of token design, go-to-market strategy, and ecosystem development." },
     { id: "about_values_heading", label: "👤 About — Values Heading", value: "Principles that guide my work" },
-    { id: "media_about_profile", label: "🖼️ About — Profile Photo / Intro Video (URL)", value: "" },
+    { id: "gallery_about_profile", label: "👤 About — Profile Gallery (Multiple Photos/Videos)", value: "" },
 
     // ─── Portfolio — Content ───
     { id: "portfolio_heading", label: "📁 Portfolio — Heading", value: "Selected case studies" },
@@ -166,6 +168,7 @@ export default function AdminTexts() {
                         <div className="space-y-4">
                             {groups[group].map((text) => {
                                 const isMedia = text.id.startsWith("media_");
+                                const isGallery = text.id.startsWith("gallery_");
                                 const isLong = text.value.length > 80 || text.id.includes("paragraph") || text.id.includes("description") || text.id.includes("journey");
 
                                 return (
@@ -175,7 +178,13 @@ export default function AdminTexts() {
                                             <CardDescription className="text-[10px] uppercase opacity-30">{text.id}</CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            {isMedia ? (
+                                            {isGallery ? (
+                                                <MediaGalleryUploader 
+                                                    value={text.value} 
+                                                    onChange={(value) => handleChange(text.id, value)} 
+                                                    label="" 
+                                                />
+                                            ) : isMedia ? (
                                                 <MediaUploader value={text.value} onChange={(url) => handleChange(text.id, url)} label="" />
                                             ) : isLong ? (
                                                 <Textarea className="min-h-[120px] bg-secondary/30 focus:bg-secondary/50 border-none transition-all" value={text.value} onChange={(e) => handleChange(text.id, e.target.value)} />
