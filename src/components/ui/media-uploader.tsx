@@ -69,7 +69,7 @@ export function MediaThumbnail({
     if (!url) {
         return (
             <div
-                className="rounded-md bg-muted flex items-center justify-center text-muted-foreground text-xs"
+                className="rounded-2xl bg-muted flex items-center justify-center text-muted-foreground text-xs"
                 style={{ width: size, height: size }}
             >
                 N/A
@@ -81,7 +81,7 @@ export function MediaThumbnail({
 
     return (
         <div
-            className="relative rounded-md overflow-hidden bg-muted"
+            className="relative rounded-2xl overflow-hidden bg-muted"
             style={{ width: size, height: size }}
         >
             {isVideo ? (
@@ -199,7 +199,7 @@ export function MediaUploader({
             {label && <label className="text-sm font-medium">{label}</label>}
 
             {hasValue ? (
-                <div className="relative group rounded-lg overflow-hidden border bg-muted/20">
+                <div className="relative group rounded-2xl overflow-hidden border bg-muted/20">
                     {valueIsVideo ? (
                         <video
                             src={value}
@@ -251,7 +251,7 @@ export function MediaUploader({
                     onDragLeave={handleDragLeave}
                     onClick={() => inputRef.current?.click()}
                     className={`
-                        border-2 border-dashed rounded-lg p-6 cursor-pointer
+                        border-2 border-dashed rounded-2xl p-6 cursor-pointer
                         flex flex-col items-center justify-center gap-2
                         transition-colors
                         ${
