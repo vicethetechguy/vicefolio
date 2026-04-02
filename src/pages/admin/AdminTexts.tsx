@@ -73,6 +73,7 @@ const defaultTextSections: TextItem[] = [
     { id: "blog_description", label: "📝 Blog — Description", value: "Thoughts on tokenomics, Web3 strategy, and building sustainable decentralized systems." },
 
     // ─── Booking Page ───
+    { id: "calendly_url", label: "📅 Booking — Calendly URL (Leave empty to use custom form)", value: "" },
     { id: "booking_label", label: "📅 Booking — Label", value: "Book a Call" },
     { id: "booking_heading", label: "📅 Booking — Heading", value: "Let's discuss your project" },
     { id: "booking_description", label: "📅 Booking — Description", value: "Schedule a free 30-minute consultation to explore how we can work together." },
