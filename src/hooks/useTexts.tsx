@@ -10,25 +10,41 @@ interface TextsContextType {
 const TextsContext = createContext<TextsContextType | undefined>(undefined);
 
 export function TextsProvider({ children }: { children: ReactNode }) {
-    const [texts, setTexts] = useState<Record<string, string>>({});
+    // Try to initialize from localStorage for instant perceived load
+    const [texts, setTexts] = useState<Record<string, string>>(() => {
+        try {
+            const cached = localStorage.getItem("vice_text_config");
+            return cached ? JSON.parse(cached) : {};
+        } catch (e) {
+            return {};
+        }
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchTexts = async () => {
-            const { data, error } = await supabase.from("texts").select("*");
-            if (!error && data) {
-                const map: Record<string, string> = {};
-                data.forEach((row: any) => {
-                    map[row.id] = row.value;
-                });
-                setTexts(map);
+            try {
+                const { data, error } = await supabase.from("texts").select("*");
+                if (!error && data) {
+                    const map: Record<string, string> = {};
+                    data.forEach((row: any) => {
+                        map[row.id] = row.value;
+                    });
+                    setTexts(map);
+                    // Update cache for next time
+                    localStorage.setItem("vice_text_config", JSON.stringify(map));
+                }
+            } catch (err) {
+                console.error("Failed to fetch texts", err);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchTexts();
     }, []);
 
     const getText = (id: string, fallback: string) => {
+        // Always prioritize the live/cached state, then fallback
         return texts[id] || fallback;
     };
 
