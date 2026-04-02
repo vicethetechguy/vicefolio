@@ -2,7 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
 import { useTexts } from "@/hooks/useTexts";
 import { useState } from "react";
-import { Calendar, Clock, ChevronRight, Check } from "lucide-react";
+import { Calendar, Clock, ChevronRight, Check, ArrowLeft, ArrowUpRight, Zap, Trophy, MessageSquare } from "lucide-react";
 import { CalendlyEmbed } from "@/components/CalendlyEmbed";
 
 const projectTypes = [
@@ -34,6 +34,8 @@ const Booking = () => {
   const [headerRef, headerInView] = useInView({ threshold: 0.1 });
   const { getText } = useTexts();
   const [step, setStep] = useState(1);
+  const [selectedSessionUrl, setSelectedSessionUrl] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     projectType: "",
     budget: "",
@@ -45,14 +47,21 @@ const Booking = () => {
     message: "",
   });
 
-  const calendlyUrl = getText("calendly_url", "");
+  const session30 = getText("calendly_30min", "");
+  const session60 = getText("calendly_60min", "");
+  const sessionCustom = getText("calendly_custom", "");
+  const hasCalendly = session30 || session60 || sessionCustom;
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (selectedSessionUrl) {
+      setSelectedSessionUrl(null);
+    } else if (step > 1) {
+      setStep(step - 1);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,23 +84,101 @@ const Booking = () => {
               {getText("booking_label", "Book a Call")}
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-              {getText("booking_heading", "Let's discuss your project")}
+              {selectedSessionUrl ? "Schedule Your Session" : getText("booking_heading", "Let's discuss your project")}
             </h1>
             <p className="text-lg text-muted-foreground">
-              {getText("booking_description", "Schedule a free 30-minute consultation to explore how we can work together.")}
+              {selectedSessionUrl 
+                ? "Select a time that works best for you. I'll see you on the call." 
+                : getText("booking_description", "Schedule a free consultation to explore how we can work together.")}
             </p>
+            
+            {selectedSessionUrl && (
+              <button 
+                onClick={() => setSelectedSessionUrl(null)}
+                className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-foreground hover:bg-secondary px-4 py-2 rounded-full transition-all border border-border"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Change Session Type
+              </button>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Booking Form or Calendly Embed */}
+      {/* Booking Hub or Custom Form */}
       <section className="pb-20">
-        <div className="container-vice max-w-4xl mx-auto">
-          {calendlyUrl ? (
-            <CalendlyEmbed url={calendlyUrl} />
+        <div className="container-vice max-w-5xl mx-auto">
+          {hasCalendly ? (
+            selectedSessionUrl ? (
+              <div className="max-w-4xl mx-auto">
+                <CalendlyEmbed url={selectedSessionUrl} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-[fadeIn_0.5s_ease-out]">
+                {/* 30 Min Card */}
+                {session30 && (
+                  <div className="group relative bg-secondary/50 border border-border p-8 rounded-3xl hover:border-foreground transition-all flex flex-col h-full hover:shadow-2xl hover:-translate-y-2 duration-500">
+                    <div className="w-14 h-14 bg-foreground text-background flex items-center justify-center rounded-2xl mb-8 group-hover:scale-110 transition-transform">
+                      <Zap className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-2xl font-light mb-2">30-Minute Meeting</h3>
+                    <p className="text-muted-foreground mb-8 text-sm leading-relaxed flex-grow">
+                      Perfect for initial introductions, quick consultations, or follow-up discussions regarding your project.
+                    </p>
+                    <button 
+                      onClick={() => setSelectedSessionUrl(session30)}
+                      className="w-full bg-foreground text-background py-4 rounded-2xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity"
+                    >
+                      Book Session
+                      <ArrowUpRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* 1 Hour Card */}
+                {session60 && (
+                  <div className="group relative bg-secondary/50 border border-border p-8 rounded-3xl hover:border-foreground transition-all flex flex-col h-full hover:shadow-2xl hover:-translate-y-2 duration-500">
+                    <div className="w-14 h-14 bg-foreground text-background flex items-center justify-center rounded-2xl mb-8 group-hover:scale-110 transition-transform">
+                      <Trophy className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-2xl font-light mb-2">1-Hour Session</h3>
+                    <p className="text-muted-foreground mb-8 text-sm leading-relaxed flex-grow">
+                      Deep-dive strategic session focused on tokenomics, GTM planning, or comprehensive product reviews.
+                    </p>
+                    <button 
+                      onClick={() => setSelectedSessionUrl(session60)}
+                      className="w-full bg-foreground text-background py-4 rounded-2xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity"
+                    >
+                      Book Session
+                      <ArrowUpRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Other/Hub Card */}
+                {sessionCustom && (
+                  <div className="group relative bg-secondary/50 border border-border p-8 rounded-3xl hover:border-foreground transition-all flex flex-col h-full hover:shadow-2xl hover:-translate-y-2 duration-500">
+                    <div className="w-14 h-14 bg-foreground text-background flex items-center justify-center rounded-2xl mb-8 group-hover:scale-110 transition-transform">
+                      <MessageSquare className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-2xl font-light mb-2">General Inquiry</h3>
+                    <p className="text-muted-foreground mb-8 text-sm leading-relaxed flex-grow">
+                      Access full booking calendar for all session types and special requests tailored to your venture.
+                    </p>
+                    <button 
+                      onClick={() => setSelectedSessionUrl(sessionCustom)}
+                      className="w-full bg-foreground text-background py-4 rounded-2xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity"
+                    >
+                      Browse Calendar
+                      <ArrowUpRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
           ) : (
             <div className="max-w-3xl mx-auto">
-              {/* Progress */}
+              {/* Fallback Custom Form (Keeping it in case URLs are cleared) */}
               <div className="flex items-center justify-center gap-4 mb-16">
                 {[1, 2, 3].map((s) => (
                   <div key={s} className="flex items-center gap-4">
@@ -178,7 +265,7 @@ const Booking = () => {
                       {getText("booking_step2_title", "Select a date")}
                     </h2>
                     <div className="grid grid-cols-7 gap-2">
-                      {Array.from({ length: 14 }).map((_, i) => {
+                       {Array.from({ length: 14 }).map((_, i) => {
                         const date = new Date();
                         date.setDate(date.getDate() + i + 1);
                         const dateStr = date.toISOString().split("T")[0];
