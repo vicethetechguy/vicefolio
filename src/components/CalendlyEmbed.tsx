@@ -16,55 +16,57 @@ export const CalendlyEmbed: React.FC<CalendlyEmbedProps> = ({ url }) => {
   }
 
   useEffect(() => {
+    // We keep a small local "syncing" feel but no global circle loader
     const timer = setTimeout(() => {
       setShowLoading(false);
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border border-border/50 bg-secondary/10 shadow-2xl animate-[fadeIn_0.5s_ease-out] no-scrollbar">
-      {/* Loading Overlay */}
+    <div className="relative w-full rounded-2xl overflow-hidden border border-border/50 bg-[#0A0A0B]/50 shadow-2xl animate-[fadeIn_0.5s_ease-out] no-scrollbar">
+      {/* Local Loader - Minimal */}
       {showLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm z-50 transition-opacity duration-700 pointer-events-none">
-          <Loader2 className="w-10 h-10 text-vice-500 animate-spin mb-4" />
-          <p className="text-xs font-bold tracking-widest uppercase text-muted-foreground opacity-50">Opening Scheduler...</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0A0B]/90 backdrop-blur-sm z-50 transition-opacity duration-700 pointer-events-none">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+          <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground opacity-50">Opening Scheduler...</p>
         </div>
       )}
 
       {/* Emergency Unlock */}
-      <div className="absolute bottom-4 right-4 z-40 opacity-50 hover:opacity-100 transition-opacity">
+      <div className="absolute bottom-4 right-4 z-40 opacity-30 hover:opacity-100 transition-opacity">
          <a 
           href={cleanUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center gap-2 text-[10px] uppercase font-bold text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-2 text-[10px] uppercase font-bold text-muted-foreground hover:text-primary transition-colors"
         >
           Open direct link
           <ExternalLink className="w-3 h-3" />
         </a>
       </div>
 
-      <div className="no-scrollbar overflow-hidden">
+      <div className="no-scrollbar overflow-hidden border-none p-0 m-0">
         <iframe
-          src={`${cleanUrl}?hide_landing_page=1&hide_gdpr_banner=1&background_color=ffcf00&text_color=000000&primary_color=000000`}
+          src={`${cleanUrl}?hide_landing_page=1&hide_gdpr_banner=1&background_color=0a0a0b&text_color=ffffff&primary_color=ffcf00`}
           width="100%"
-          height="800"
+          height="750"
           frameBorder="0"
           title="Schedule with Calendly"
-          className={`w-full h-[800px] border-none transition-opacity duration-1000 ${showLoading ? 'opacity-30' : 'opacity-100'} no-scrollbar`}
+          className={`w-full h-[750px] border-none transition-opacity duration-1000 ${showLoading ? 'opacity-30' : 'opacity-100'} no-scrollbar`}
           onLoad={() => setShowLoading(false)}
-          /* @ts-ignore - scrolling is deprecated but works for hiding scrollbars in iframes */
+          /* @ts-ignore - scrolling works to hide scrollbars in many browsers */
           scrolling="no" 
-          style={{ overflow: 'hidden', border: 'none' }}
+          style={{ overflow: 'hidden !important', border: 'none' }}
         ></iframe>
       </div>
       
-      {/* Heavy-duty global scrollbar removal for this page context */}
+      {/* Absolute scrollbar removal utilities */}
       <style dangerouslySetInnerHTML={{ __html: `
         .no-scrollbar::-webkit-scrollbar { display: none !important; }
         .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; overflow: hidden !important; }
         iframe::-webkit-scrollbar { display: none !important; }
+        iframe { border: none !important; overflow: hidden !important; }
       `}} />
     </div>
   );

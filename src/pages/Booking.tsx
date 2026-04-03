@@ -110,7 +110,7 @@ const Booking = () => {
         <div className="container-vice max-w-5xl mx-auto">
           {hasCalendly ? (
             selectedSessionUrl ? (
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-4xl mx-auto no-scrollbar overflow-hidden">
                 <CalendlyEmbed url={selectedSessionUrl} />
               </div>
             ) : (
