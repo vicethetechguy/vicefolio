@@ -60,13 +60,12 @@
   }
 
   .dark {
-    /* Since the site is now dark by default, we keep them balanced */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
   }
 }
 
-/* Admin panel remains clean gray/white as requested earlier */
+/* Admin panel remains clean gray/white */
 .admin-layout,
 .admin-layout *:not(dialog):not([role="dialog"]):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *) {
   --background: 0 0% 96%;
@@ -127,7 +126,7 @@
   }
 
   .stat-label {
-    @apply text-xs uppercase tracking-widest text-vice-grey-400 mt-1;
+    @apply text-xs uppercase tracking-widest text-vice-400 mt-1;
   }
 
   /* Hero headline */
@@ -137,7 +136,7 @@
 
   /* Scroll indicator */
   .scroll-indicator {
-    @apply text-sm tracking-widest uppercase text-vice-grey-400;
+    @apply text-sm tracking-widest uppercase text-vice-400;
   }
 
   /* Section spacing */
@@ -152,7 +151,7 @@
 
   /* Custom Premium Card */
   .glass-card {
-    @apply bg-vice-grey-800/50 backdrop-blur-md border border-white/5 rounded-2xl p-8 hover:border-primary/20 transition-all duration-500;
+    @apply bg-vice-800/50 backdrop-blur-md border border-white/5 rounded-2xl p-8 hover:border-primary/20 transition-all duration-500;
   }
 }
 
