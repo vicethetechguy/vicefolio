@@ -217,4 +217,11 @@
       transform: translateX(0);
     }
   }
+
+  /* Global Scroll Lock Utility */
+  .no-page-scroll {
+    overflow: hidden !important;
+    height: 100vh !important;
+    width: 100vw !important;
+  }
 }

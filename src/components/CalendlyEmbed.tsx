@@ -16,7 +16,6 @@ export const CalendlyEmbed: React.FC<CalendlyEmbedProps> = ({ url }) => {
   }
 
   useEffect(() => {
-    // We keep a small local "syncing" feel but no global circle loader
     const timer = setTimeout(() => {
       setShowLoading(false);
     }, 1500);
@@ -24,7 +23,7 @@ export const CalendlyEmbed: React.FC<CalendlyEmbedProps> = ({ url }) => {
   }, []);
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border border-border/50 bg-[#0A0A0B]/50 shadow-2xl animate-[fadeIn_0.5s_ease-out] no-scrollbar">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden no-scrollbar bg-transparent">
       {/* Local Loader - Minimal */}
       {showLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0A0B]/90 backdrop-blur-sm z-50 transition-opacity duration-700 pointer-events-none">
@@ -46,22 +45,26 @@ export const CalendlyEmbed: React.FC<CalendlyEmbedProps> = ({ url }) => {
         </a>
       </div>
 
-      <div className="no-scrollbar overflow-hidden border-none p-0 m-0">
+      {/* 
+        The Zero-Scroll Iframe 
+        We use height="100%" to fill the parent container exactly.
+      */}
+      <div className="w-full h-full no-scrollbar overflow-hidden">
         <iframe
           src={`${cleanUrl}?hide_landing_page=1&hide_gdpr_banner=1&background_color=0a0a0b&text_color=ffffff&primary_color=ffcf00`}
           width="100%"
-          height="750"
+          height="100%"
           frameBorder="0"
           title="Schedule with Calendly"
-          className={`w-full h-[750px] border-none transition-opacity duration-1000 ${showLoading ? 'opacity-30' : 'opacity-100'} no-scrollbar`}
+          className={`w-full h-full border-none transition-opacity duration-1000 ${showLoading ? 'opacity-30' : 'opacity-100'} no-scrollbar`}
           onLoad={() => setShowLoading(false)}
-          /* @ts-ignore - scrolling works to hide scrollbars in many browsers */
+          /* @ts-ignore */
           scrolling="no" 
           style={{ overflow: 'hidden !important', border: 'none' }}
         ></iframe>
       </div>
       
-      {/* Absolute scrollbar removal utilities */}
+      {/* Final barrier for forcing zero scrollbar appearance */}
       <style dangerouslySetInnerHTML={{ __html: `
         .no-scrollbar::-webkit-scrollbar { display: none !important; }
         .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; overflow: hidden !important; }

@@ -1,8 +1,8 @@
 import { Layout } from "@/components/layout/Layout";
 import { useInView } from "@/hooks/useInView";
 import { useTexts } from "@/hooks/useTexts";
-import { useState } from "react";
-import { Calendar, Clock, ChevronRight, Check, ArrowLeft, ArrowUpRight, Zap, Trophy, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Zap, Trophy, MessageSquare, ArrowLeft, ArrowUpRight, Check, Calendar, Clock, ChevronRight } from "lucide-react";
 import { CalendlyEmbed } from "@/components/CalendlyEmbed";
 
 const projectTypes = [
@@ -52,17 +52,20 @@ const Booking = () => {
   const sessionCustom = getText("calendly_custom", "");
   const hasCalendly = session30 || session60 || sessionCustom;
 
-  const handleNext = () => {
-    if (step < 3) setStep(step + 1);
-  };
-
-  const handleBack = () => {
+  // DEFINITIVE FIX: When Calendly is selected, lock the page scroll to zero
+  useEffect(() => {
     if (selectedSessionUrl) {
-      setSelectedSessionUrl(null);
-    } else if (step > 1) {
-      setStep(step - 1);
+      document.documentElement.classList.add("no-page-scroll");
+      document.body.classList.add("no-page-scroll");
+    } else {
+      document.documentElement.classList.remove("no-page-scroll");
+      document.body.classList.remove("no-page-scroll");
     }
-  };
+    return () => {
+      document.documentElement.classList.remove("no-page-scroll");
+      document.body.classList.remove("no-page-scroll");
+    };
+  }, [selectedSessionUrl]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,63 +74,73 @@ const Booking = () => {
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="section-padding">
-        <div className="container-vice">
-          <div
-            ref={headerRef}
-            className={`max-w-3xl mx-auto text-center transition-all duration-700 ${
-              headerInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-              {getText("booking_label", "Book a Call")}
-            </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-              {selectedSessionUrl ? "Schedule Your Session" : getText("booking_heading", "Let's discuss your project")}
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              {selectedSessionUrl 
-                ? "Select a time that works best for you. I'll see you on the call." 
-                : getText("booking_description", "Schedule a free consultation to explore how we can work together.")}
-            </p>
-            
-            {selectedSessionUrl && (
+      {/* 
+        If Calendly is showing, we use a Special fixed layout with NO scrollbar possible. 
+      */}
+      {selectedSessionUrl ? (
+        <section className="fixed inset-0 z-[60] bg-background flex flex-col pt-20 md:pt-24 animate-[fadeIn_0.4s_ease-out]">
+          <div className="container-vice flex flex-col h-full pb-6">
+            {/* Minimal Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-light tracking-tight">Schedule Your {selectedSessionUrl.includes('30min') ? '30-Min' : '1-Hour'} Session</h1>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">Select a time below</p>
+              </div>
               <button 
                 onClick={() => setSelectedSessionUrl(null)}
-                className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-foreground hover:bg-secondary px-4 py-2 rounded-full transition-all border border-border"
+                className="inline-flex items-center gap-2 text-xs uppercase font-bold tracking-widest text-muted-foreground hover:text-primary transition-colors py-2 group"
               >
-                <ArrowLeft className="w-4 h-4" />
-                Change Session Type
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                Change Session
               </button>
-            )}
+            </div>
+            
+            {/* The Zero-Scroll Card - It takes 100% of remaining space */}
+            <div className="flex-1 min-h-0 bg-secondary/20 rounded-3xl border border-white/5 relative overflow-hidden no-scrollbar">
+               <CalendlyEmbed url={selectedSessionUrl} />
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Booking Hub or Custom Form */}
-      <section className="pb-20">
-        <div className="container-vice max-w-5xl mx-auto">
-          {hasCalendly ? (
-            selectedSessionUrl ? (
-              <div className="max-w-4xl mx-auto no-scrollbar overflow-hidden">
-                <CalendlyEmbed url={selectedSessionUrl} />
+        </section>
+      ) : (
+        <>
+          {/* Normal Layout for Hub selection */}
+          <section className="section-padding">
+            <div className="container-vice">
+              <div
+                ref={headerRef}
+                className={`max-w-3xl mx-auto text-center transition-all duration-700 ${
+                  headerInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
+              >
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
+                  {getText("booking_label", "Book a Call")}
+                </p>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
+                  {getText("booking_heading", "Let's discuss your project")}
+                </h1>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                  {getText("booking_description", "Schedule a free consultation to explore how we can work together.")}
+                </p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-[fadeIn_0.5s_ease-out]">
+            </div>
+          </section>
+
+          <section className="pb-32">
+            <div className="container-vice max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-[fadeUp_0.8s_ease-out]">
                 {/* 30 Min Card */}
                 {session30 && (
-                  <div className="group relative bg-secondary/50 border border-border p-8 rounded-3xl hover:border-foreground transition-all flex flex-col h-full hover:shadow-2xl hover:-translate-y-2 duration-500">
-                    <div className="w-14 h-14 bg-foreground text-background flex items-center justify-center rounded-2xl mb-8 group-hover:scale-110 transition-transform">
+                  <div className="group glass-card flex flex-col h-full hover:-translate-y-2 !p-10">
+                    <div className="w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center rounded-2xl mb-8 shadow-[0_0_20px_rgba(255,207,0,0.2)]">
                       <Zap className="w-7 h-7" />
                     </div>
                     <h3 className="text-2xl font-light mb-2">30-Minute Meeting</h3>
                     <p className="text-muted-foreground mb-8 text-sm leading-relaxed flex-grow">
-                      Perfect for initial introductions, quick consultations, or follow-up discussions regarding your project.
+                      Initial introductions, quick consultations, or follow-up discussions regarding your project.
                     </p>
                     <button 
                       onClick={() => setSelectedSessionUrl(session30)}
-                      className="w-full bg-foreground text-background py-4 rounded-2xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity"
+                      className="w-full bg-white text-black py-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase font-bold tracking-widest hover:bg-primary transition-all"
                     >
                       Book Session
                       <ArrowUpRight className="w-4 h-4" />
@@ -137,17 +150,17 @@ const Booking = () => {
 
                 {/* 1 Hour Card */}
                 {session60 && (
-                  <div className="group relative bg-secondary/50 border border-border p-8 rounded-3xl hover:border-foreground transition-all flex flex-col h-full hover:shadow-2xl hover:-translate-y-2 duration-500">
-                    <div className="w-14 h-14 bg-foreground text-background flex items-center justify-center rounded-2xl mb-8 group-hover:scale-110 transition-transform">
+                  <div className="group glass-card flex flex-col h-full hover:-translate-y-2 !p-10 border-primary/20">
+                    <div className="w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center rounded-2xl mb-8 shadow-[0_0_20px_rgba(255,207,0,0.2)]">
                       <Trophy className="w-7 h-7" />
                     </div>
                     <h3 className="text-2xl font-light mb-2">1-Hour Session</h3>
-                    <p className="text-muted-foreground mb-8 text-sm leading-relaxed flex-grow">
-                      Deep-dive strategic session focused on tokenomics, GTM planning, or comprehensive product reviews.
+                    <p className="text-muted-foreground mb-8 text-sm leading-relaxed flex-grow font-light">
+                      Deep-dive strategic session focused on tokenomics, GTM planning, or product architecture.
                     </p>
                     <button 
                       onClick={() => setSelectedSessionUrl(session60)}
-                      className="w-full bg-foreground text-background py-4 rounded-2xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity"
+                      className="w-full bg-primary text-primary-foreground py-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase font-bold tracking-widest hover:scale-105 transition-all shadow-lg"
                     >
                       Book Session
                       <ArrowUpRight className="w-4 h-4" />
@@ -155,263 +168,30 @@ const Booking = () => {
                   </div>
                 )}
 
-                {/* Other/Hub Card */}
+                {/* General Inquiry */}
                 {sessionCustom && (
-                  <div className="group relative bg-secondary/50 border border-border p-8 rounded-3xl hover:border-foreground transition-all flex flex-col h-full hover:shadow-2xl hover:-translate-y-2 duration-500">
-                    <div className="w-14 h-14 bg-foreground text-background flex items-center justify-center rounded-2xl mb-8 group-hover:scale-110 transition-transform">
+                  <div className="group glass-card flex flex-col h-full hover:-translate-y-2 !p-10">
+                    <div className="w-14 h-14 bg-white/10 text-white flex items-center justify-center rounded-2xl mb-8 group-hover:bg-white/20 transition-all">
                       <MessageSquare className="w-7 h-7" />
                     </div>
-                    <h3 className="text-2xl font-light mb-2">General Inquiry</h3>
+                    <h3 className="text-2xl font-light mb-2">General Hub</h3>
                     <p className="text-muted-foreground mb-8 text-sm leading-relaxed flex-grow">
-                      Access full booking calendar for all session types and special requests tailored to your venture.
+                      Access full booking calendar for custom availability and special request sessions.
                     </p>
                     <button 
                       onClick={() => setSelectedSessionUrl(sessionCustom)}
-                      className="w-full bg-foreground text-background py-4 rounded-2xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity"
+                      className="w-full border border-white/20 text-white py-4 rounded-xl flex items-center justify-center gap-2 text-xs uppercase font-bold tracking-widest hover:bg-white hover:text-black transition-all"
                     >
-                      Browse Calendar
+                      Browse All
                       <ArrowUpRight className="w-4 h-4" />
                     </button>
                   </div>
                 )}
               </div>
-            )
-          ) : (
-            <div className="max-w-3xl mx-auto">
-              {/* Fallback Custom Form (Keeping it in case URLs are cleared) */}
-              <div className="flex items-center justify-center gap-4 mb-16">
-                {[1, 2, 3].map((s) => (
-                  <div key={s} className="flex items-center gap-4">
-                    <div
-                      className={`w-10 h-10 flex items-center justify-center border transition-all ${
-                        step >= s
-                          ? "bg-foreground text-background border-foreground shadow-lg scale-110"
-                          : "border-border text-muted-foreground"
-                      }`}
-                    >
-                      {step > s ? <Check className="w-5 h-5" /> : s}
-                    </div>
-                    {s < 3 && (
-                      <div
-                        className={`w-16 h-px transition-colors ${
-                          step > s ? "bg-foreground" : "bg-border"
-                        }`}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {step === 1 && (
-                <div className="space-y-12 animate-[fadeIn_0.3s_ease-out]">
-                  <div>
-                    <h2 className="text-2xl font-light mb-6">
-                       {getText("booking_step1_title", "What type of project are you working on?")}
-                    </h2>
-                    <div className="grid grid-cols-1 gap-3">
-                      {projectTypes.map((type) => (
-                        <button
-                          key={type}
-                          onClick={() => setFormData({ ...formData, projectType: type })}
-                          className={`p-4 border text-left transition-all rounded-2xl ${
-                            formData.projectType === type
-                              ? "border-foreground bg-secondary"
-                              : "border-border hover:border-foreground"
-                          }`}
-                        >
-                          {type}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h2 className="text-2xl font-light mb-6">
-                      {getText("booking_step1_subtitle", "What's your estimated budget?")}
-                    </h2>
-                    <div className="grid grid-cols-2 gap-3">
-                      {budgetRanges.map((range) => (
-                        <button
-                          key={range}
-                          onClick={() => setFormData({ ...formData, budget: range })}
-                          className={`p-4 border text-center transition-all rounded-2xl ${
-                            formData.budget === range
-                              ? "border-foreground bg-secondary font-medium"
-                              : "border-border hover:border-foreground"
-                          }`}
-                        >
-                          {range}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleNext}
-                    disabled={!formData.projectType || !formData.budget}
-                    className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-4 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity rounded-2xl font-medium"
-                  >
-                    Continue
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-12 animate-[fadeIn_0.3s_ease-out]">
-                  <div>
-                    <h2 className="text-2xl font-light mb-6 flex items-center gap-3">
-                      <Calendar className="w-6 h-6" />
-                      {getText("booking_step2_title", "Select a date")}
-                    </h2>
-                    <div className="grid grid-cols-7 gap-2">
-                       {Array.from({ length: 14 }).map((_, i) => {
-                        const date = new Date();
-                        date.setDate(date.getDate() + i + 1);
-                        const dateStr = date.toISOString().split("T")[0];
-                        const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-                        const dayNum = date.getDate();
-
-                        return (
-                          <button
-                            key={dateStr}
-                            onClick={() => setFormData({ ...formData, date: dateStr })}
-                            className={`p-3 border text-center transition-all rounded-2xl ${
-                              formData.date === dateStr
-                                ? "border-foreground bg-secondary"
-                                : "border-border hover:border-foreground"
-                            }`}
-                          >
-                            <p className="text-xs text-muted-foreground font-medium uppercase">{dayName}</p>
-                            <p className="text-lg font-light">{dayNum}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h2 className="text-2xl font-light mb-6 flex items-center gap-3">
-                      <Clock className="w-6 h-6" />
-                      {getText("booking_step2_subtitle", "Select a time")}
-                    </h2>
-                    <div className="grid grid-cols-4 gap-3">
-                      {timeSlots.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => setFormData({ ...formData, time })}
-                          className={`p-3 border text-center transition-all rounded-2xl ${
-                            formData.time === time
-                              ? "border-foreground bg-secondary font-medium"
-                              : "border-border hover:border-foreground"
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handleBack}
-                      className="flex-1 border border-foreground py-4 hover:bg-secondary transition-colors rounded-2xl font-medium"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handleNext}
-                      disabled={!formData.date || !formData.time}
-                      className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-4 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity rounded-2xl font-medium"
-                    >
-                      Continue
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <form onSubmit={handleSubmit} className="space-y-8 animate-[fadeIn_0.3s_ease-out]">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm mb-2 font-medium">Name *</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors rounded-2xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm mb-2 font-medium">Email *</label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors rounded-2xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm mb-2 font-medium">Company / Protocol</label>
-                    <input
-                      type="text"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors rounded-2xl"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm mb-2 font-medium">Tell me about your project</label>
-                    <textarea
-                      rows={4}
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full border border-border bg-transparent px-4 py-3 focus:border-foreground focus:outline-none transition-colors resize-none rounded-2xl"
-                    />
-                  </div>
-
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="flex-1 border border-foreground py-4 hover:bg-secondary transition-colors rounded-2xl font-medium"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex-1 bg-foreground text-background py-4 hover:opacity-90 transition-opacity rounded-2xl font-medium shadow-lg"
-                    >
-                      Confirm Booking
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {step === 4 && (
-                <div className="text-center py-16 animate-[fadeIn_0.3s_ease-out]">
-                  <div className="w-16 h-16 bg-foreground text-background flex items-center justify-center mx-auto mb-8 rounded-full shadow-lg">
-                    <Check className="w-8 h-8" />
-                  </div>
-                  <h2 className="text-3xl font-light mb-4">{getText("booking_success_title", "Booking Confirmed!")}</h2>
-                  <p className="text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-                    {getText("booking_success_msg", "You'll receive a confirmation email shortly with the meeting details.")}
-                  </p>
-                  <div className="inline-block px-6 py-4 bg-secondary rounded-2xl text-foreground font-medium border border-border">
-                    {formData.date} at {formData.time}
-                  </div>
-                </div>
-              )}
             </div>
-          )}
-        </div>
-      </section>
+          </section>
+        </>
+      )}
     </Layout>
   );
 };
