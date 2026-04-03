@@ -56,13 +56,12 @@ export const Navbar = () => {
           ))}
         </div>
 
-        {/* CTA Button */}
         <Link
           to="/booking"
-          className="hidden md:flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity"
+          className="hidden md:flex items-center gap-2 text-xs uppercase font-bold tracking-widest bg-primary text-primary-foreground px-6 py-3 rounded-full hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,207,0,0.15)] hover:shadow-[0_0_30px_rgba(255,207,0,0.3)]"
         >
           Book A Call
-          <ArrowUpRight className="w-4 h-4" />
+          <ArrowUpRight className="w-3.5 h-3.5" />
         </Link>
 
         {/* Mobile Menu Button */}

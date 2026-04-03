@@ -43,7 +43,7 @@ export const ServicesSection = () => {
   }, []);
 
   return (
-    <section className="section-padding bg-secondary/30">
+    <section className="section-padding bg-[#0A0A0B]">
       <div className="container-vice">
         {/* Section Header */}
         <div
@@ -61,7 +61,7 @@ export const ServicesSection = () => {
         </div>
 
         {/* Services Grid */}
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border rounded-2xl overflow-hidden border border-border">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {loading ? (
              <div className="col-span-2 text-center py-20 bg-background text-muted-foreground">Loading services...</div>
           ) : services.map((service, index) => {
@@ -76,14 +76,16 @@ export const ServicesSection = () => {
               >
                 <Link
                   to={`/services#${service.id}`}
-                  className="group block bg-background p-8 md:p-12 lg:p-16 h-full transition-colors hover:bg-secondary/50"
+                  className="group block glass-card h-full transition-all duration-500 hover:bg-white/5 active:scale-[0.98]"
                 >
-                  <Icon className="w-8 h-8 mb-8 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  <h3 className="text-2xl md:text-3xl font-light mb-4 flex items-center gap-3 text-foreground">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-8 group-hover:bg-primary transition-colors duration-500">
+                    <Icon className="w-6 h-6 text-primary group-hover:text-black transition-colors duration-500" />
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-light mb-4 flex items-center justify-between gap-3 text-white">
                     {service.title}
-                    <ArrowUpRight className="w-5 h-5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                    <ArrowUpRight className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-primary transition-all duration-500" />
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed font-light">
+                  <p className="text-vice-grey-400 leading-relaxed font-light group-hover:text-white/80 transition-colors duration-500">
                     {service.description}
                   </p>
                 </Link>

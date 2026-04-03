@@ -25,14 +25,14 @@ export const CTASection = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/booking"
-              className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-10 py-5 text-sm font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-10 py-5 text-xs uppercase font-bold tracking-widest hover:scale-105 transition-all duration-300 rounded-full shadow-[0_0_20px_rgba(255,207,0,0.1)] hover:shadow-[0_0_30px_rgba(255,207,0,0.3)]"
             >
               Schedule a Consultation
               <ArrowUpRight className="w-4 h-4" />
             </Link>
             <Link
               to="/contact"
-              className="inline-flex items-center justify-center gap-2 border border-foreground px-10 py-5 text-sm font-medium hover:bg-foreground hover:text-background transition-all"
+              className="inline-flex items-center justify-center gap-2 border border-white/20 px-10 py-5 text-xs uppercase font-bold tracking-widest hover:bg-white hover:text-black transition-all rounded-full"
             >
               Send a Message
             </Link>
