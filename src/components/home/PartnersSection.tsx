@@ -16,7 +16,7 @@ export const PartnersSection = () => {
   const { getText } = useTexts();
 
   return (
-    <section className="py-16 md:py-24 border-y border-border overflow-hidden relative">
+    <section className="pt-8 md:pt-12 pb-16 md:pb-24 border-b border-border overflow-hidden relative">
       <Reveal className="container-vice mb-12" y={20}>
         <p className="text-xs uppercase tracking-widest text-muted-foreground text-center">
           {getText("home_partners_label", "Trusted by Industry Leaders")}

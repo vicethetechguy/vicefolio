@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { ArrowDown } from "lucide-react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import victorPortrait from "@/assets/victor-chime.png";
 import { useTexts } from "@/hooks/useTexts";
@@ -19,7 +18,7 @@ export const HeroSection = () => {
   const textY = useTransform(scrollYProgress, [0, 0.6], ["0%", "-8%"]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-screen overflow-hidden">
+    <section ref={sectionRef} className="relative overflow-hidden">
       {/* ── Atmosphere ── */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-grid-faint [mask-image:radial-gradient(ellipse_70%_60%_at_50%_40%,black,transparent)]" />
@@ -29,7 +28,7 @@ export const HeroSection = () => {
       </div>
 
       <div className="container-vice relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-6rem)] items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-6rem)] items-center pt-8 lg:pt-0">
           {/* ── Left content ── */}
           <motion.div
             className="lg:col-span-6 xl:col-span-5 relative pt-12 lg:pt-0"
@@ -73,12 +72,6 @@ export const HeroSection = () => {
               </Reveal>
             </div>
 
-            {/* Scroll indicator with animated line */}
-            <Reveal delay={1} y={0} blur={false} className="absolute bottom-12 left-0 lg:left-12 hidden lg:flex items-center gap-3">
-              <span className="scroll-indicator">Scroll down</span>
-              <ArrowDown className="w-4 h-4 animate-bounce text-primary" />
-            </Reveal>
-
             {/* Year */}
             <Reveal
               delay={1.1} y={0} blur={false}
@@ -95,7 +88,7 @@ export const HeroSection = () => {
 
           {/* ── Portrait with parallax + glow frame ── */}
           <motion.div
-            className="lg:col-span-6 xl:col-span-7 relative flex justify-center lg:justify-end items-end -mx-6 md:-mx-12 lg:mx-0"
+            className="lg:col-span-6 xl:col-span-7 relative flex justify-center lg:justify-end items-end self-end -mx-6 md:-mx-12 lg:mx-0 -mb-px"
             initial={{ opacity: 0, scale: 1.04 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.4, delay: 0.3, ease: [0.21, 0.6, 0.35, 1] }}
@@ -119,17 +112,12 @@ export const HeroSection = () => {
                   className="w-full h-auto lg:h-[85vh] object-cover object-top grayscale hover:grayscale-0 transition-all duration-1000"
                 />
               )}
-              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-10" />
+              {/* Soft fade so the portrait melts into the section below */}
+              <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/70 to-transparent z-10 pointer-events-none" />
             </motion.div>
           </motion.div>
         </div>
       </div>
-
-      {/* Mobile scroll indicator */}
-      <Reveal delay={1} y={0} blur={false} className="lg:hidden absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
-        <span className="scroll-indicator text-xs">Scroll down</span>
-        <ArrowDown className="w-3 h-3 animate-bounce text-primary" />
-      </Reveal>
     </section>
   );
 };
