@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { getIcon } from "@/lib/icon-library";
 import { isVideoUrl } from "@/components/ui/media-uploader";
 import {
   Reveal, WordReveal, staggerContainer, staggerItem,
@@ -16,6 +17,7 @@ interface CaseStudy {
   description: string;
   slug: string;
   image_url?: string;
+  icon?: string;
 }
 
 export const CaseStudiesSection = () => {
@@ -78,7 +80,9 @@ export const CaseStudiesSection = () => {
         >
           {loading ? (
             <div className="col-span-2 text-center py-10 text-muted-foreground">Loading projects...</div>
-          ) : caseStudies.map((study) => (
+          ) : caseStudies.map((study, index) => {
+            const StudyIcon = getIcon(study.icon, "Coins");
+            return (
             <motion.article key={study.slug} variants={staggerItem}>
               <Link to={`/portfolio/${study.slug}`} className="group block">
                 {/* Media */}
@@ -126,6 +130,15 @@ export const CaseStudiesSection = () => {
 
                 {/* Content */}
                 <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                      <span className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
+                        <StudyIcon className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500" />
+                      </span>
+                      <span className="text-xs font-mono text-primary/50 tracking-widest">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                    </div>
                   <div>
                     <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 group-hover:text-primary transition-colors duration-500">
                       {study.category}
@@ -138,13 +151,15 @@ export const CaseStudiesSection = () => {
                       {study.description}
                     </p>
                   </div>
+                  </div>
                   <span className="text-3xl md:text-4xl font-light text-foreground/30 group-hover:text-primary/80 transition-colors duration-700 shrink-0">
                     {study.metric}
                   </span>
                 </div>
               </Link>
             </motion.article>
-          ))}
+            );
+          })}
         </motion.div>
       </div>
     </section>

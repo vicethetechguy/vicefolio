@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { supabase } from "@/lib/supabase";
+import { getIcon } from "@/lib/icon-library";
 import {
   Reveal, WordReveal, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -16,6 +17,7 @@ interface BlogPost {
   date: string;
   read_time: string;
   slug: string;
+  icon?: string;
 }
 
 const Blog = () => {
@@ -94,7 +96,9 @@ const Blog = () => {
               whileInView="visible"
               viewport={{ once: true, margin: "-60px" }}
             >
-              {posts.map((post) => (
+              {posts.map((post, index) => {
+                const PostIcon = getIcon(post.icon, "FileText");
+                return (
                 <motion.article
                   key={post.slug}
                   variants={staggerItem}
@@ -108,6 +112,14 @@ const Blog = () => {
                     <span className="absolute inset-0 -mx-6 rounded-2xl bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                     <div className="lg:col-span-2">
+                      <div className="flex items-center gap-2.5 mb-3">
+                        <span className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
+                          <PostIcon className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500" />
+                        </span>
+                        <span className="text-xs font-mono text-primary/50 tracking-widest">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                      </div>
                       <p className="text-xs uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-500">
                         {post.category || "General"}
                       </p>
@@ -128,7 +140,8 @@ const Blog = () => {
                     </div>
                   </Link>
                 </motion.article>
-              ))}
+                );
+              })}
             </motion.div>
           )}
         </div>

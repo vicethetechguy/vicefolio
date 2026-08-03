@@ -10,6 +10,8 @@ import {
     PageHeader, SearchInput, FilterPills, Th, useSort, sortItems,
     TableShell, LoadingState, EmptyState, FormSheet, ConfirmDialog, Field, slugify,
 } from "@/components/admin/admin-ui";
+import { IconPicker } from "@/components/admin/icon-picker";
+import { getIcon } from "@/lib/icon-library";
 
 interface PortfolioProject {
     id: string;
@@ -20,6 +22,7 @@ interface PortfolioProject {
     slug: string;
     year: string;
     image_url?: string;
+    icon?: string;
 }
 
 export default function AdminPortfolio() {
@@ -100,7 +103,7 @@ export default function AdminPortfolio() {
     const openCreate = () => {
         const fresh = {
             title: "", slug: "", category: "Tokenomics", metric: "",
-            year: new Date().getFullYear().toString(), description: "", image_url: "",
+            year: new Date().getFullYear().toString(), description: "", image_url: "", icon: "Coins",
         };
         setCurrent(fresh);
         setOriginal(JSON.stringify(fresh));
@@ -132,6 +135,7 @@ export default function AdminPortfolio() {
                 <thead className="bg-gray-50/80 border-b border-gray-200">
                     <tr>
                         <Th label="Media" className="w-20" />
+                        <Th label="Icon" className="w-16" />
                         <Th label="Title" sortKey="title" sort={sort} onSort={toggle} />
                         <Th label="Category" sortKey="category" sort={sort} onSort={toggle} className="hidden sm:table-cell" />
                         <Th label="Metric" sortKey="metric" sort={sort} onSort={toggle} className="hidden md:table-cell" />
@@ -141,18 +145,25 @@ export default function AdminPortfolio() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {loading ? (
-                        <tr><td colSpan={6}><LoadingState label="Loading projects…" /></td></tr>
+                        <tr><td colSpan={7}><LoadingState label="Loading projects…" /></td></tr>
                     ) : filtered.length === 0 ? (
-                        <tr><td colSpan={6}>
+                        <tr><td colSpan={7}>
                             <EmptyState
                                 title={projects.length === 0 ? "No projects yet" : "No projects match your filters"}
                                 description={projects.length === 0 ? "Add your first case study to showcase your work." : "Try a different search or filter."}
                                 action={projects.length === 0 ? <Button size="sm" onClick={openCreate}>Add project</Button> : undefined}
                             />
                         </td></tr>
-                    ) : filtered.map((project) => (
+                    ) : filtered.map((project) => {
+                        const ProjectIcon = getIcon(project.icon, "Coins");
+                        return (
                         <tr key={project.id} className="hover:bg-gray-50/60 transition-colors">
                             <td className="p-3 pl-4"><MediaThumbnail url={project.image_url || ""} alt={project.title} /></td>
+                            <td className="p-3">
+                                <span className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+                                    <ProjectIcon className="w-4 h-4" />
+                                </span>
+                            </td>
                             <td className="p-3 font-medium max-w-[240px]">
                                 <span className="block truncate" title={project.title}>{project.title}</span>
                                 <span className="block text-xs text-muted-foreground truncate">/{project.slug}</span>
@@ -177,7 +188,8 @@ export default function AdminPortfolio() {
                                 </div>
                             </td>
                         </tr>
-                    ))}
+                        );
+                    })}
                 </tbody>
             </TableShell>
 
@@ -219,6 +231,11 @@ export default function AdminPortfolio() {
                             <Input value={current.year || ""} onChange={(e) => setField({ year: e.target.value })} />
                         </Field>
                     </div>
+                    <IconPicker
+                        value={current.icon}
+                        onChange={(name) => setField({ icon: name })}
+                        label="Project Icon"
+                    />
                     <Field label="Description">
                         <Textarea value={current.description || ""} className="min-h-[140px]" onChange={(e) => setField({ description: e.target.value })} />
                     </Field>

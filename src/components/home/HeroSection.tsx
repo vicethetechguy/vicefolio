@@ -95,7 +95,7 @@ export const HeroSection = () => {
 
           {/* ── Portrait with parallax + glow frame ── */}
           <motion.div
-            className="lg:col-span-6 xl:col-span-7 relative flex justify-center lg:justify-end items-end"
+            className="lg:col-span-6 xl:col-span-7 relative flex justify-center lg:justify-end items-end -mx-6 md:-mx-12 lg:mx-0"
             initial={{ opacity: 0, scale: 1.04 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.4, delay: 0.3, ease: [0.21, 0.6, 0.35, 1] }}
@@ -104,7 +104,7 @@ export const HeroSection = () => {
             <div className="absolute right-1/4 top-1/3 w-[28rem] h-[28rem] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
 
             <motion.div
-              className="relative w-full max-w-lg lg:max-w-none lg:w-auto will-change-transform"
+              className="relative w-full max-w-none lg:w-auto will-change-transform"
               style={reduced ? undefined : { y: portraitY, scale: portraitScale }}
             >
               {getText("gallery_hero_bg", "") ? (

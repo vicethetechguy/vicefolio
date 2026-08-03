@@ -10,6 +10,8 @@ import {
     PageHeader, SearchInput, FilterPills, Th, useSort, sortItems,
     TableShell, LoadingState, EmptyState, StatusBadge, FormSheet, ConfirmDialog, Field, slugify,
 } from "@/components/admin/admin-ui";
+import { IconPicker } from "@/components/admin/icon-picker";
+import { getIcon } from "@/lib/icon-library";
 
 interface Blog {
     id: string;
@@ -22,6 +24,7 @@ interface Blog {
     read_time?: string;
     slug?: string;
     image_url?: string;
+    icon?: string;
 }
 
 export default function AdminBlogs() {
@@ -74,6 +77,7 @@ export default function AdminBlogs() {
             excerpt: current.excerpt, category: current.category,
             read_time: current.read_time, slug: current.slug,
             content: current.content, image_url: current.image_url || "",
+            icon: current.icon || "FileText",
         };
         const { error } = current.id
             ? await supabase.from("blogs").update(payload).eq("id", current.id)
@@ -103,7 +107,7 @@ export default function AdminBlogs() {
     const openCreate = () => {
         const fresh = {
             title: "", date: new Date().toISOString().split("T")[0], status: "Draft",
-            slug: "", category: "General", read_time: "5 min read", image_url: "",
+            slug: "", category: "General", read_time: "5 min read", image_url: "", icon: "FileText",
         };
         setCurrent(fresh);
         setOriginal(JSON.stringify(fresh));
@@ -133,6 +137,7 @@ export default function AdminBlogs() {
                 <thead className="bg-gray-50/80 border-b border-gray-200">
                     <tr>
                         <Th label="Media" className="w-20" />
+                        <Th label="Icon" className="w-16" />
                         <Th label="Title" sortKey="title" sort={sort} onSort={toggle} />
                         <Th label="Category" sortKey="category" sort={sort} onSort={toggle} className="hidden md:table-cell" />
                         <Th label="Date" sortKey="date" sort={sort} onSort={toggle} className="hidden sm:table-cell" />
@@ -142,18 +147,25 @@ export default function AdminBlogs() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {loading ? (
-                        <tr><td colSpan={6}><LoadingState label="Loading blogs…" /></td></tr>
+                        <tr><td colSpan={7}><LoadingState label="Loading blogs…" /></td></tr>
                     ) : filtered.length === 0 ? (
-                        <tr><td colSpan={6}>
+                        <tr><td colSpan={7}>
                             <EmptyState
                                 title={blogs.length === 0 ? "No blog posts yet" : "No posts match your filters"}
                                 description={blogs.length === 0 ? "Write your first post to get started." : "Try a different search or filter."}
                                 action={blogs.length === 0 ? <Button size="sm" onClick={openCreate}>Create post</Button> : undefined}
                             />
                         </td></tr>
-                    ) : filtered.map((blog) => (
+                    ) : filtered.map((blog) => {
+                        const BlogIcon = getIcon(blog.icon, "FileText");
+                        return (
                         <tr key={blog.id} className="hover:bg-gray-50/60 transition-colors">
                             <td className="p-3 pl-4"><MediaThumbnail url={blog.image_url || ""} alt={blog.title} /></td>
+                            <td className="p-3">
+                                <span className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+                                    <BlogIcon className="w-4 h-4" />
+                                </span>
+                            </td>
                             <td className="p-3 font-medium max-w-[240px]">
                                 <span className="block truncate" title={blog.title}>{blog.title}</span>
                                 <span className="block text-xs text-muted-foreground truncate">/{blog.slug}</span>
@@ -172,7 +184,8 @@ export default function AdminBlogs() {
                                 </div>
                             </td>
                         </tr>
-                    ))}
+                        );
+                    })}
                 </tbody>
             </TableShell>
 
@@ -233,6 +246,11 @@ export default function AdminBlogs() {
                             ))}
                         </div>
                     </Field>
+                    <IconPicker
+                        value={current.icon}
+                        onChange={(name) => setField({ icon: name })}
+                        label="Post Icon"
+                    />
                     <Field label="Excerpt" hint="Short description shown on blog listing.">
                         <Textarea value={current.excerpt || ""} className="min-h-[80px]" onChange={(e) => setField({ excerpt: e.target.value })} />
                     </Field>

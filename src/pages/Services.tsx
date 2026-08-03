@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useTexts } from "@/hooks/useTexts";
-import { ArrowUpRight, Check, Coins, Rocket, BarChart3, Users, LucideIcon } from "lucide-react";
+import { ArrowUpRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { getIcon } from "@/lib/icon-library";
 import {
   Reveal, WordReveal, Magnetic, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -18,15 +19,8 @@ interface Service {
   features: string[];
 }
 
-const iconMap: Record<string, LucideIcon> = {
-  Coins: Coins,
-  Rocket: Rocket,
-  BarChart3: BarChart3,
-  Users: Users,
-};
-
 function ServiceCard({ service, index }: { service: Service; index: number }) {
-  const IconComponent = iconMap[service.icon] || Rocket;
+  const IconComponent = getIcon(service.icon);
 
   return (
     <motion.div

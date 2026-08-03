@@ -1,9 +1,10 @@
-import { ArrowUpRight, Coins, Rocket, BarChart3, Users, LucideIcon } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { getIcon } from "@/lib/icon-library";
 import {
   Reveal, WordReveal, TiltCard, Magnetic, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -14,13 +15,6 @@ interface Service {
   description: string;
   id: string;
 }
-
-const iconMap: Record<string, LucideIcon> = {
-  Coins: Coins,
-  Rocket: Rocket,
-  BarChart3: BarChart3,
-  Users: Users,
-};
 
 export const ServicesSection = () => {
   const { getText } = useTexts();
@@ -77,7 +71,7 @@ export const ServicesSection = () => {
           {loading ? (
             <div className="col-span-2 text-center py-20 text-muted-foreground">Loading services...</div>
           ) : services.map((service) => {
-            const Icon = iconMap[service.icon] || Rocket;
+            const Icon = getIcon(service.icon);
             return (
               <motion.div key={service.id} variants={staggerItem}>
                 <TiltCard className="h-full">

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { useTexts } from "@/hooks/useTexts";
 import { supabase } from "@/lib/supabase";
+import { getIcon } from "@/lib/icon-library";
 import { isVideoUrl } from "@/components/ui/media-uploader";
 import {
   Reveal, WordReveal, staggerContainer, staggerItem,
@@ -19,6 +20,7 @@ interface PortfolioProject {
   slug: string;
   year: string;
   image_url?: string;
+  icon?: string;
 }
 
 const Portfolio = () => {
@@ -96,7 +98,9 @@ const Portfolio = () => {
               whileInView="visible"
               viewport={{ once: true, margin: "-60px" }}
             >
-              {projects.map((project) => (
+              {projects.map((project, index) => {
+                const ProjectIcon = getIcon(project.icon, "Coins");
+                return (
                 <motion.article key={project.slug} variants={staggerItem}>
                   <Link to={`/portfolio/${project.slug}`} className="group block">
                     {/* Media */}
@@ -140,26 +144,39 @@ const Portfolio = () => {
                     </div>
 
                     {/* Content */}
-                    <div>
-                      <div className="flex items-center gap-4 mb-2">
-                        <p className="text-xs uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-500">
-                          {project.category}
-                        </p>
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {project.year}
+                    <div className="flex items-start gap-4">
+                      {/* Editable icon + index */}
+                      <div className="flex items-center gap-2 shrink-0 pt-1">
+                        <span className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
+                          <ProjectIcon className="w-5 h-5 text-primary group-hover:text-black transition-colors duration-500" />
+                        </span>
+                        <span className="text-xs font-mono text-primary/50 tracking-widest">
+                          {String(index + 1).padStart(2, "0")}
                         </span>
                       </div>
-                      <h3 className="text-xl md:text-2xl font-light mb-2 relative inline-block">
-                        {project.title}
-                        <span className="absolute left-0 -bottom-0.5 w-full h-px bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                      </h3>
-                      <p className="text-muted-foreground text-sm max-w-sm">
-                        {project.description}
-                      </p>
+
+                      <div>
+                        <div className="flex items-center gap-4 mb-2">
+                          <p className="text-xs uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-500">
+                            {project.category}
+                          </p>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {project.year}
+                          </span>
+                        </div>
+                        <h3 className="text-xl md:text-2xl font-light mb-2 relative inline-block">
+                          {project.title}
+                          <span className="absolute left-0 -bottom-0.5 w-full h-px bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                        </h3>
+                        <p className="text-muted-foreground text-sm max-w-sm">
+                          {project.description}
+                        </p>
+                      </div>
                     </div>
                   </Link>
                 </motion.article>
-              ))}
+                );
+              })}
             </motion.div>
           )}
         </div>
