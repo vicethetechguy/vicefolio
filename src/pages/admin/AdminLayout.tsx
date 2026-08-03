@@ -143,7 +143,7 @@ export default function AdminLayout() {
                                 <Menu className="w-5 h-5" />
                             </button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="p-0 w-72 border-r-0 bg-zinc-950">
+                        <SheetContent side="left" className="p-0 w-72 border-r-0 bg-zinc-950 text-white">
                             <SidebarNav onNavigate={() => setMobileOpen(false)} />
                         </SheetContent>
                     </Sheet>

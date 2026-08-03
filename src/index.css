@@ -83,6 +83,15 @@
   --border: 0 0% 90%;
 }
 
+/* Force readable dark text inside the light admin panel regardless of site theme.
+   Low specificity on purpose: any element with its own text-* utility still wins. */
+.admin-layout {
+  color: hsl(0 0% 10%);
+}
+.admin-portal {
+  color: hsl(0 0% 10%);
+}
+
 /* Portaled admin overlays (sheets, dialogs) keep the light admin theme */
 .admin-portal,
 .admin-portal * {
