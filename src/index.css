@@ -1,4 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600;700;800;900&family=Poppins:wght@200;300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap');
+
+/* ── Garet ──────────────────────────────────────────────────────────────
+   Garet is not on Google Fonts, so it is self-hosted. Drop the .woff2 files
+   into public/fonts/ using the names below and they will be picked up
+   automatically. Until then the site falls back to Montserrat, so nothing
+   breaks if the files are missing. See public/fonts/README.md.            */
+
+@font-face {
+  font-family: 'Garet';
+  src: url('/fonts/Garet-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Garet';
+  src: url('/fonts/Garet-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Garet';
+  src: url('/fonts/Garet-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Garet';
+  src: url('/fonts/Garet-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Garet';
+  src: url('/fonts/Garet-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;

@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Body copy
-        sans: ["Poppins", "system-ui", "sans-serif"],
+        // Body copy — Garet is self-hosted; Montserrat covers it until the files land
+        sans: ["Garet", "Montserrat", "system-ui", "sans-serif"],
         // Headings and display type
         display: ["Montserrat", "system-ui", "sans-serif"],
       },

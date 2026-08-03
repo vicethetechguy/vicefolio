@@ -218,7 +218,7 @@ export const Navbar = () => {
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
                 <p className="text-center text-xs text-muted-foreground mt-6 tracking-widest uppercase">
-                  Product: Development · Management · Marketing
+                  Development · Management · Marketing
                 </p>
               </motion.div>
             </motion.div>
