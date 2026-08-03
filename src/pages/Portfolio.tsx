@@ -122,7 +122,7 @@ const Portfolio = () => {
                         )
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-vice-700 to-vice-800 group-hover:scale-105 transition-transform duration-1000 flex items-center justify-center">
-                          <span className="text-6xl font-extralight text-vice-500 opacity-40">
+                          <span className="px-8 text-center text-2xl font-extralight text-vice-500 opacity-40 line-clamp-4">
                             {project.metric}
                           </span>
                         </div>
@@ -131,8 +131,8 @@ const Portfolio = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                       {project.metric && (
-                        <div className="absolute bottom-4 left-4 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary text-black text-sm font-semibold shadow-[0_0_25px_hsl(49_100%_50%/0.5)]">
+                        <div className="absolute bottom-3 left-3 right-3 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                          <span className="inline-flex items-center max-w-full px-2.5 py-1 rounded-full bg-primary text-black text-[10px] leading-snug font-semibold shadow-[0_0_20px_hsl(49_100%_50%/0.45)] line-clamp-2 text-left">
                             {project.metric}
                           </span>
                         </div>

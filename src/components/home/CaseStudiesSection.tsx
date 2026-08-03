@@ -104,7 +104,7 @@ export const CaseStudiesSection = () => {
                     )
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-vice-700 to-vice-800 group-hover:scale-105 transition-transform duration-1000 flex items-center justify-center">
-                      <span className="text-6xl font-extralight text-vice-500 opacity-40">
+                      <span className="px-8 text-center text-2xl font-extralight text-vice-500 opacity-40 line-clamp-4">
                         {study.metric}
                       </span>
                     </div>
@@ -115,8 +115,8 @@ export const CaseStudiesSection = () => {
 
                   {/* Metric badge */}
                   {study.metric && (
-                    <div className="absolute bottom-4 left-4 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary text-black text-sm font-semibold shadow-[0_0_25px_hsl(49_100%_50%/0.5)]">
+                    <div className="absolute bottom-3 left-3 right-3 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                      <span className="inline-flex items-center max-w-full px-2.5 py-1 rounded-full bg-primary text-black text-[10px] leading-snug font-semibold shadow-[0_0_20px_hsl(49_100%_50%/0.45)] line-clamp-2 text-left">
                         {study.metric}
                       </span>
                     </div>
@@ -142,7 +142,7 @@ export const CaseStudiesSection = () => {
                     <p className="text-xs uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-500 truncate">
                       {study.category}
                     </p>
-                    <span className="ml-auto md:hidden text-lg font-light text-primary/70 shrink-0">
+                    <span className="ml-auto md:hidden text-xs font-medium text-primary/70 max-w-[45%] truncate">
                       {study.metric}
                     </span>
                   </div>
@@ -158,7 +158,7 @@ export const CaseStudiesSection = () => {
                         {study.description}
                       </p>
                     </div>
-                    <span className="hidden md:block text-3xl md:text-4xl font-light text-foreground/30 group-hover:text-primary/80 transition-colors duration-700 shrink-0">
+                    <span className="hidden md:block text-base lg:text-lg font-light text-foreground/40 group-hover:text-primary/80 transition-colors duration-700 shrink-0 max-w-[9rem] text-right leading-snug line-clamp-3">
                       {study.metric}
                     </span>
                   </div>
