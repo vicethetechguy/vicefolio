@@ -129,32 +129,39 @@ export const CaseStudiesSection = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex items-center gap-2 shrink-0 pt-0.5">
-                      <span className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
-                        <StudyIcon className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500" />
-                      </span>
-                      <span className="text-xs font-mono text-primary/50 tracking-widest">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                    </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 group-hover:text-primary transition-colors duration-500">
+                <div>
+                  {/* Meta row: icon, index, category — metric sits here on mobile */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
+                      <StudyIcon className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500" />
+                    </span>
+                    <span className="text-xs font-mono text-primary/50 tracking-widest shrink-0">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="w-px h-4 bg-white/10 shrink-0" />
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-500 truncate">
                       {study.category}
                     </p>
-                    <h3 className="text-xl md:text-2xl font-light mb-2 text-foreground relative inline-block">
-                      {study.title}
-                      <span className="absolute left-0 -bottom-0.5 w-full h-px bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                    </h3>
-                    <p className="text-muted-foreground text-sm max-w-sm">
-                      {study.description}
-                    </p>
+                    <span className="ml-auto md:hidden text-lg font-light text-primary/70 shrink-0">
+                      {study.metric}
+                    </span>
                   </div>
+
+                  {/* Title + description get the full width */}
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="min-w-0">
+                      <h3 className="text-xl md:text-2xl font-light mb-2 text-foreground relative inline-block">
+                        {study.title}
+                        <span className="absolute left-0 -bottom-0.5 w-full h-px bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                      </h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed max-w-sm">
+                        {study.description}
+                      </p>
+                    </div>
+                    <span className="hidden md:block text-3xl md:text-4xl font-light text-foreground/30 group-hover:text-primary/80 transition-colors duration-700 shrink-0">
+                      {study.metric}
+                    </span>
                   </div>
-                  <span className="text-3xl md:text-4xl font-light text-foreground/30 group-hover:text-primary/80 transition-colors duration-700 shrink-0">
-                    {study.metric}
-                  </span>
                 </div>
               </Link>
             </motion.article>
