@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { isVideoUrl } from "@/components/ui/media-uploader";
@@ -27,21 +27,24 @@ export const CaseStudiesSection = () => {
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchLatest = async () => {
-      const { data, error } = await supabase
-        .from("portfolio_projects")
-        .select("*")
-        .limit(4)
-        .order("year", { ascending: false });
+  const fetchLatest = useCallback(async () => {
+    setLoading(true);
 
-      if (!error && data) {
-        setCaseStudies(data);
-      }
-      setLoading(false);
-    };
-    fetchLatest();
+    const { data, error } = await supabase
+      .from("portfolio_projects")
+      .select("*")
+      .order("year", { ascending: false })
+      .limit(4);
+
+    if (error) {
+      console.error("Failed to load case studies:", error);
+    } else {
+      setCaseStudies(data ?? []);
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => { fetchLatest(); }, [fetchLatest]);
 
   return (
     <section className="section-padding relative overflow-hidden">
@@ -72,7 +75,14 @@ export const CaseStudiesSection = () => {
           </Reveal>
         </div>
 
-        {/* Case studies grid */}
+        {/* Case studies grid — same fix as ServicesSection: the animated container
+            only mounts once there is something to reveal, otherwise the `once`
+            viewport trigger fires on an empty grid and later cards stay invisible. */}
+        {loading ? (
+          <div className="text-center py-10 text-muted-foreground">Loading projects…</div>
+        ) : caseStudies.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground">No projects published yet.</div>
+        ) : (
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12"
           variants={staggerContainer}
@@ -80,9 +90,7 @@ export const CaseStudiesSection = () => {
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
         >
-          {loading ? (
-            <div className="col-span-2 text-center py-10 text-muted-foreground">Loading projects...</div>
-          ) : caseStudies.map((study, index) => {
+          {caseStudies.map((study, index) => {
             return (
             <motion.article key={study.slug} variants={staggerItem}>
               <ProjectLink
@@ -180,6 +188,7 @@ export const CaseStudiesSection = () => {
             );
           })}
         </motion.div>
+        )}
       </div>
     </section>
   );

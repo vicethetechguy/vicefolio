@@ -1,8 +1,8 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, RotateCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import {
@@ -20,22 +20,29 @@ export const ServicesSection = () => {
   const { getText } = useTexts();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .limit(4)
-        .order("created_at", { ascending: true });
+  const fetchServices = useCallback(async () => {
+    setLoading(true);
+    setFailed(false);
 
-      if (!error && data) {
-        setServices(data);
-      }
-      setLoading(false);
-    };
-    fetchServices();
+    const { data, error } = await supabase
+      .from("services")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .limit(4);
+
+    if (error) {
+      // Previously this failed silently and the section rendered empty.
+      console.error("Failed to load services:", error);
+      setFailed(true);
+    } else {
+      setServices(data ?? []);
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => { fetchServices(); }, [fetchServices]);
 
   return (
     <section className="section-padding bg-[#0A0A0B] relative overflow-hidden">
@@ -60,7 +67,28 @@ export const ServicesSection = () => {
           />
         </div>
 
-        {/* Services grid — tilt cards with cursor glow */}
+        {/* Services grid — tilt cards with cursor glow.
+            The animated container is mounted only once the data is in. Mounting it
+            while still loading let the scroll reveal fire on an empty grid; because
+            the viewport trigger is `once`, cards that arrived afterwards stayed
+            stuck at opacity 0 — the section appeared blank at random. */}
+        {loading ? (
+          <div className="text-center py-20 text-muted-foreground">Loading services…</div>
+        ) : failed ? (
+          <div className="text-center py-20">
+            <p className="text-muted-foreground mb-4">Couldn't load services just now.</p>
+            <button
+              type="button"
+              onClick={fetchServices}
+              className="inline-flex items-center gap-2 text-sm font-medium border border-white/15 px-6 py-3 rounded-[6px] hover:bg-foreground hover:text-background transition-colors duration-300"
+            >
+              <RotateCw className="w-4 h-4" />
+              Try again
+            </button>
+          </div>
+        ) : services.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">No services published yet.</div>
+        ) : (
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
           variants={staggerContainer}
@@ -68,9 +96,7 @@ export const ServicesSection = () => {
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
         >
-          {loading ? (
-            <div className="col-span-2 text-center py-20 text-muted-foreground">Loading services...</div>
-          ) : services.map((service) => {
+          {services.map((service) => {
             return (
               <motion.div key={service.id} variants={staggerItem}>
                 <TiltCard className="h-full">
@@ -98,6 +124,7 @@ export const ServicesSection = () => {
             );
           })}
         </motion.div>
+        )}
 
         {/* CTA */}
         <Reveal delay={0.3} className="mt-16 text-center">

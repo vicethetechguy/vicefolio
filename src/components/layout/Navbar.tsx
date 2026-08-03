@@ -5,10 +5,10 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
-  { name: "About Me", path: "/about" },
-  { name: "Portfolio", path: "/portfolio" },
-  { name: "Services", path: "/services" },
-  { name: "Blog", path: "/blog" },
+  { name: "About Me", path: "/about", label: "Profile" },
+  { name: "Portfolio", path: "/portfolio", label: "Work" },
+  { name: "Services", path: "/services", label: "Expertise" },
+  { name: "Blog", path: "/blog", label: "Insights" },
 ];
 
 /* Curtain wipes down on open, back up on close */
@@ -118,7 +118,7 @@ export const Navbar = () => {
 
           <Link
             to="/booking"
-            className="hidden md:flex items-center gap-2 text-xs uppercase font-bold tracking-widest bg-primary text-primary-foreground px-6 py-3 rounded-full hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,207,0,0.15)] hover:shadow-[0_0_30px_rgba(255,207,0,0.3)]"
+            className="hidden md:flex items-center gap-2 text-xs uppercase font-bold tracking-widest bg-primary text-primary-foreground px-6 py-3 rounded-[6px] hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,207,0,0.15)] hover:shadow-[0_0_30px_rgba(255,207,0,0.3)]"
           >
             Book A Call
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -171,29 +171,36 @@ export const Navbar = () => {
                 className="relative z-10 flex-1 flex flex-col justify-center px-8 pt-20"
                 variants={listVariants}
               >
-                {navLinks.map((link, i) => (
-                  <div key={link.path} className="overflow-hidden py-1">
-                    <motion.div variants={itemVariants} className="will-change-transform">
-                      <Link
-                        to={link.path}
-                        onClick={() => setOpen(false)}
-                        className={`group flex items-baseline gap-4 text-5xl sm:text-6xl font-extralight tracking-tight leading-[1.15] transition-colors duration-300 ${
-                          location.pathname === link.path
-                            ? "text-primary"
-                            : "text-foreground hover:text-primary"
-                        }`}
-                      >
-                        <span className="text-xs font-mono text-primary/50 tracking-widest translate-y-[-0.5em]">
-                          0{i + 1}
-                        </span>
-                        <span className="relative">
-                          {link.name}
-                          <span className="absolute left-0 -bottom-1 h-[2px] w-full bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                        </span>
-                      </Link>
-                    </motion.div>
-                  </div>
-                ))}
+                {navLinks.map((link) => {
+                  const active = location.pathname === link.path;
+                  return (
+                    <div key={link.path} className="overflow-hidden py-2">
+                      <motion.div variants={itemVariants} className="will-change-transform">
+                        <Link
+                          to={link.path}
+                          onClick={() => setOpen(false)}
+                          className={`group block transition-colors duration-300 ${
+                            active ? "text-primary" : "text-foreground hover:text-primary"
+                          }`}
+                        >
+                          {/* Editorial eyebrow replaces the old 01–04 numbering */}
+                          <span
+                            className={`flex items-center gap-2.5 mb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.25em] transition-colors duration-300 ${
+                              active ? "text-primary" : "text-primary/45 group-hover:text-primary/80"
+                            }`}
+                          >
+                            <span className="h-px w-5 bg-current" />
+                            {link.label}
+                          </span>
+                          <span className="relative inline-block font-display text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1]">
+                            {link.name}
+                            <span className="absolute left-0 -bottom-1 h-[2px] w-full bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                          </span>
+                        </Link>
+                      </motion.div>
+                    </div>
+                  );
+                })}
               </motion.nav>
 
               {/* Footer CTA */}
@@ -205,13 +212,13 @@ export const Navbar = () => {
                 <Link
                   to="/booking"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground py-5 rounded-full text-xs uppercase font-bold tracking-widest shadow-[0_0_30px_hsl(49_100%_50%/0.3)] active:scale-95 transition-transform"
+                  className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground py-5 rounded-[6px] text-xs uppercase font-bold tracking-widest shadow-[0_0_30px_hsl(49_100%_50%/0.3)] active:scale-95 transition-transform"
                 >
                   Book A Call
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
                 <p className="text-center text-xs text-muted-foreground mt-6 tracking-widest uppercase">
-                  Tokenomics · Strategy · Web3
+                  Product: Development · Management · Marketing
                 </p>
               </motion.div>
             </motion.div>

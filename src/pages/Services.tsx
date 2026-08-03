@@ -171,7 +171,7 @@ const Services = () => {
             <Magnetic strength={0.4}>
               <Link
                 to="/booking"
-                className="group relative inline-flex items-center gap-2 bg-primary text-primary-foreground px-10 py-5 text-xs uppercase font-bold tracking-widest rounded-full overflow-hidden shadow-[0_0_30px_hsl(49_100%_50%/0.25)] hover:shadow-[0_0_50px_hsl(49_100%_50%/0.5)] hover:scale-105 transition-all duration-500"
+                className="group relative inline-flex items-center gap-2 bg-primary text-primary-foreground px-10 py-5 text-xs uppercase font-bold tracking-widest rounded-[6px] overflow-hidden shadow-[0_0_30px_hsl(49_100%_50%/0.25)] hover:shadow-[0_0_50px_hsl(49_100%_50%/0.5)] hover:scale-105 transition-all duration-500"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-1000 ease-out" />
                 <span className="relative">Schedule a Consultation</span>
