@@ -44,7 +44,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             {/* Brand */}
             <div className="flex h-16 shrink-0 items-center px-5 border-b border-zinc-800/80">
                 <Link to="/" className="flex items-center gap-2.5 group" onClick={onNavigate}>
-                    <img src="/favicon.svg" alt="VICE Logo" className="w-6 h-6" />
+                    <img src="/favicon.svg" alt="VICE Logo" className="w-6 h-6 invert" />
                     <span className="text-lg font-bold font-mono tracking-tighter text-white">
                         VICE <span className="text-blue-500">Panel</span>
                     </span>

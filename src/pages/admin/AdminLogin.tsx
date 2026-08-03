@@ -36,7 +36,7 @@ export default function AdminLogin() {
                 {/* Brand */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 mb-4 shadow-xl">
-                        <img src="/favicon.svg" alt="VICE Logo" className="w-7 h-7" />
+                        <img src="/favicon.svg" alt="VICE Logo" className="w-7 h-7 invert" />
                     </div>
                     <h1 className="text-2xl font-bold font-mono tracking-tighter text-white">
                         VICE <span className="text-blue-500">Panel</span>
