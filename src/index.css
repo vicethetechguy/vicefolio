@@ -191,6 +191,104 @@
     text-wrap: balance;
   }
 
+  /* ── Cinematic atmosphere ────────────────────────────── */
+
+  /* Faint blueprint grid */
+  .bg-grid-faint {
+    background-image:
+      linear-gradient(to right, hsl(0 0% 100% / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(0 0% 100% / 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* Drifting aurora blobs (use on absolutely-positioned divs) */
+  .aurora-gold {
+    background: radial-gradient(circle, hsl(49 100% 50% / 0.14), transparent 65%);
+    animation: aurora-drift 16s ease-in-out infinite alternate;
+  }
+  .aurora-cool {
+    background: radial-gradient(circle, hsl(240 60% 55% / 0.12), transparent 65%);
+    animation: aurora-drift 20s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes aurora-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(6%, -8%) scale(1.15); }
+    100% { transform: translate(-5%, 6%) scale(0.95); }
+  }
+
+  /* Film grain */
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  /* Fade the edges of full-bleed marquees */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  }
+
+  /* Gold shimmer sweep on borders */
+  .border-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .border-shimmer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, transparent 30%, hsl(49 100% 50% / 0.55), transparent 70%);
+    background-size: 250% 250%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: shimmer-sweep 3.5s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes shimmer-sweep {
+    0%   { background-position: 250% 0; }
+    100% { background-position: -250% 0; }
+  }
+
+  /* Slow spin for decorative rings */
+  .animate-spin-slow {
+    animation: spin 24s linear infinite;
+  }
+
+  /* Marquee (pausable) */
+  .animate-marquee-slow {
+    animation: marquee-x 36s linear infinite;
+  }
+  .marquee-paused:hover .animate-marquee-slow {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-x {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Gold text gradient */
+  .text-gradient-gold {
+    background: linear-gradient(100deg, #fff 20%, hsl(49 100% 62%) 50%, #fff 80%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gold-pan 6s ease-in-out infinite;
+  }
+  @keyframes gold-pan {
+    0%, 100% { background-position: 0% center; }
+    50%      { background-position: 100% center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-gold, .aurora-cool, .border-shimmer::before,
+    .animate-marquee-slow, .animate-spin-slow, .text-gradient-gold {
+      animation: none;
+    }
+  }
+
   .animate-fade-up {
     animation: fadeUp 0.8s ease-out forwards;
   }

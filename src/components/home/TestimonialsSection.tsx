@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
-import { useInView } from "@/hooks/useInView";
+import { motion, AnimatePresence } from "framer-motion";
+import { Reveal } from "@/components/motion/primitives";
 import { useTexts } from "@/hooks/useTexts";
 
 const testimonials = [
@@ -24,54 +25,73 @@ const testimonials = [
   },
 ];
 
+const AUTOPLAY_MS = 7000;
+
 export const TestimonialsSection = () => {
   const [current, setCurrent] = useState(0);
-  const [containerRef, inView] = useInView({ threshold: 0.1 });
+  const [direction, setDirection] = useState(1);
   const { getText } = useTexts();
 
-  const next = () => setCurrent((prev) => (prev + 1) % testimonials.length);
-  const prev = () =>
-    setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  const go = useCallback((dir: 1 | -1) => {
+    setDirection(dir);
+    setCurrent((prev) => (prev + dir + testimonials.length) % testimonials.length);
+  }, []);
+
+  // Autoplay
+  useEffect(() => {
+    const t = setInterval(() => go(1), AUTOPLAY_MS);
+    return () => clearInterval(t);
+  }, [current, go]);
 
   return (
-    <section className="section-padding bg-foreground text-background">
-      <div className="container-vice">
-        <div
-          ref={containerRef}
-          className={`max-w-4xl mx-auto transition-all duration-700 ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          <p className="text-xs uppercase tracking-widest text-background/60 mb-12 text-center">
-            {getText("home_testimonials_label", "Client Testimonials")}
-          </p>
+    <section className="section-padding relative overflow-hidden border-y border-border">
+      {/* Atmosphere */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="aurora-gold absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[30rem] rounded-full blur-3xl opacity-50" />
+        <div className="bg-noise absolute inset-0 opacity-[0.03] mix-blend-overlay" />
+      </div>
 
-          <div className="relative">
-            <Quote className="w-12 h-12 text-background/20 absolute -top-6 -left-6" />
+      <div className="container-vice relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <Reveal y={20}>
+            <p className="text-xs uppercase tracking-widest text-primary mb-12 text-center flex items-center justify-center gap-3">
+              <span className="w-8 h-px bg-primary/60" />
+              {getText("home_testimonials_label", "Client Testimonials")}
+              <span className="w-8 h-px bg-primary/60" />
+            </p>
+          </Reveal>
 
-            <blockquote
-              key={current}
-              className="text-2xl md:text-3xl lg:text-4xl font-light leading-relaxed text-center mb-12 animate-[fadeIn_0.5s_ease-out] text-background"
-            >
-              "{testimonials[current].quote}"
-            </blockquote>
+          <div className="relative min-h-[280px] md:min-h-[300px]">
+            <Quote className="w-16 h-16 text-primary/15 absolute -top-8 -left-4 md:-left-10" />
 
-            <div
-              key={`author-${current}`}
-              className="text-center animate-[fadeIn_0.5s_ease-out_0.2s_both]"
-            >
-              <p className="text-lg font-medium text-background">{testimonials[current].author}</p>
-              <p className="text-background/60 text-sm">
-                {testimonials[current].role}
-              </p>
-            </div>
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={current}
+                custom={direction}
+                initial={{ opacity: 0, x: direction * 60, filter: "blur(6px)" }}
+                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: direction * -60, filter: "blur(6px)" }}
+                transition={{ duration: 0.6, ease: [0.21, 0.6, 0.35, 1] }}
+              >
+                <blockquote className="text-2xl md:text-3xl lg:text-4xl font-light leading-relaxed text-center mb-12 text-foreground">
+                  "{testimonials[current].quote}"
+                </blockquote>
+
+                <div className="text-center">
+                  <p className="text-lg font-medium text-foreground">{testimonials[current].author}</p>
+                  <p className="text-primary/80 text-sm mt-0.5">
+                    {testimonials[current].role}
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Navigation */}
-          <div className="flex justify-center items-center gap-8 mt-16">
+          <div className="flex justify-center items-center gap-8 mt-14">
             <button
-              onClick={prev}
-              className="w-12 h-12 border border-background/30 flex items-center justify-center hover:bg-background hover:text-foreground transition-all"
+              onClick={() => go(-1)}
+              className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center hover:border-primary hover:text-primary hover:shadow-[0_0_20px_hsl(49_100%_50%/0.2)] transition-all duration-300"
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -81,9 +101,11 @@ export const TestimonialsSection = () => {
               {testimonials.map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrent(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === current ? "bg-background w-8" : "bg-background/30"
+                  onClick={() => { setDirection(index > current ? 1 : -1); setCurrent(index); }}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    index === current
+                      ? "bg-primary w-10 shadow-[0_0_10px_hsl(49_100%_50%/0.6)]"
+                      : "bg-white/20 w-1.5 hover:bg-white/40"
                   }`}
                   aria-label={`Go to testimonial ${index + 1}`}
                 />
@@ -91,8 +113,8 @@ export const TestimonialsSection = () => {
             </div>
 
             <button
-              onClick={next}
-              className="w-12 h-12 border border-background/30 flex items-center justify-center hover:bg-background hover:text-foreground transition-all"
+              onClick={() => go(1)}
+              className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center hover:border-primary hover:text-primary hover:shadow-[0_0_20px_hsl(49_100%_50%/0.2)] transition-all duration-300"
               aria-label="Next testimonial"
             >
               <ChevronRight className="w-5 h-5" />

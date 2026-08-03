@@ -1,18 +1,21 @@
-import { ArrowUpRight, Coins, Rocket, BarChart3, Users } from "lucide-react";
+import { ArrowUpRight, Coins, Rocket, BarChart3, Users, LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useInView } from "@/hooks/useInView";
+import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  Reveal, WordReveal, TiltCard, Magnetic, staggerContainer, staggerItem,
+} from "@/components/motion/primitives";
 
 interface Service {
-  icon: string | any;
+  icon: string;
   title: string;
   description: string;
   id: string;
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, LucideIcon> = {
   Coins: Coins,
   Rocket: Rocket,
   BarChart3: BarChart3,
@@ -20,8 +23,6 @@ const iconMap: Record<string, any> = {
 };
 
 export const ServicesSection = () => {
-  const [headerRef, headerInView] = useInView({ threshold: 0.1 });
-  const [gridRef, gridInView] = useInView({ threshold: 0.1 });
   const { getText } = useTexts();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,71 +44,76 @@ export const ServicesSection = () => {
   }, []);
 
   return (
-    <section className="section-padding bg-[#0A0A0B]">
-      <div className="container-vice">
-        {/* Section Header */}
-        <div
-          ref={headerRef}
-          className={`mb-16 md:mb-24 transition-all duration-700 ${
-            headerInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-            {getText("home_services_label", "Services")}
-          </p>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight max-w-3xl text-foreground">
-            {getText("home_services_heading", "Strategic expertise for ambitious Web3 ventures")}
-          </h2>
+    <section className="section-padding bg-[#0A0A0B] relative overflow-hidden">
+      {/* Atmosphere */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="aurora-gold absolute -bottom-64 -right-64 w-[40rem] h-[40rem] rounded-full blur-3xl opacity-60" />
+      </div>
+
+      <div className="container-vice relative z-10">
+        {/* Section header */}
+        <div className="mb-16 md:mb-24">
+          <Reveal y={20}>
+            <p className="text-xs uppercase tracking-widest text-primary mb-4 flex items-center gap-3">
+              <span className="w-8 h-px bg-primary/60" />
+              {getText("home_services_label", "Services")}
+            </p>
+          </Reveal>
+          <WordReveal
+            text={getText("home_services_heading", "Strategic expertise for ambitious Web3 ventures")}
+            className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight max-w-3xl text-foreground"
+            delay={0.15}
+          />
         </div>
 
-        {/* Services Grid */}
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Services grid — tilt cards with cursor glow */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           {loading ? (
-             <div className="col-span-2 text-center py-20 bg-background text-muted-foreground">Loading services...</div>
-          ) : services.map((service, index) => {
+            <div className="col-span-2 text-center py-20 text-muted-foreground">Loading services...</div>
+          ) : services.map((service) => {
             const Icon = iconMap[service.icon] || Rocket;
             return (
-              <div
-                key={service.id}
-                className={`transition-all duration-700 ${
-                  gridInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-                style={{ transitionDelay: `${index * 100}ms` }}
-              >
-                <Link
-                  to={`/services#${service.id}`}
-                  className="group block glass-card h-full transition-all duration-500 hover:bg-white/5 active:scale-[0.98]"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-8 group-hover:bg-primary transition-colors duration-500">
-                    <Icon className="w-6 h-6 text-primary group-hover:text-black transition-colors duration-500" />
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-light mb-4 flex items-center justify-between gap-3 text-white">
-                    {service.title}
-                    <ArrowUpRight className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-primary transition-all duration-500" />
-                  </h3>
-                  <p className="text-vice-grey-400 leading-relaxed font-light group-hover:text-white/80 transition-colors duration-500">
-                    {service.description}
-                  </p>
-                </Link>
-              </div>
+              <motion.div key={service.id} variants={staggerItem}>
+                <TiltCard className="h-full">
+                  <Link
+                    to={`/services#${service.id}`}
+                    className="group block glass-card h-full transition-all duration-500 hover:bg-white/5 hover:border-primary/30 hover:shadow-[0_20px_60px_-20px_hsl(49_100%_50%/0.15)] active:scale-[0.98]"
+                  >
+                    <div className="relative w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-8 group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 group-hover:shadow-[0_0_30px_hsl(49_100%_50%/0.4)]">
+                      <Icon className="w-6 h-6 text-primary group-hover:text-black transition-colors duration-500" />
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-light mb-4 flex items-center justify-between gap-3 text-white">
+                      {service.title}
+                      <ArrowUpRight className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-primary group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-500" />
+                    </h3>
+                    <p className="text-vice-grey-400 leading-relaxed font-light group-hover:text-white/80 transition-colors duration-500">
+                      {service.description}
+                    </p>
+                  </Link>
+                </TiltCard>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* CTA */}
-        <div
-          className={`mt-16 text-center transition-all duration-700 delay-500 ${
-            gridInView ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <Link
-            to="/services"
-            className="inline-flex items-center gap-2 text-sm font-medium border border-foreground px-8 py-4 hover:bg-foreground hover:text-background transition-all rounded-2xl"
-          >
-            View All Services
-            <ArrowUpRight className="w-4 h-4" />
-          </Link>
-        </div>
+        <Reveal delay={0.3} className="mt-16 text-center">
+          <Magnetic>
+            <Link
+              to="/services"
+              className="border-shimmer inline-flex items-center gap-2 text-sm font-medium border border-white/15 px-8 py-4 hover:bg-foreground hover:text-background transition-colors duration-300 rounded-2xl"
+            >
+              View All Services
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
+          </Magnetic>
+        </Reveal>
       </div>
     </section>
   );
