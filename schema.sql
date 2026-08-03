@@ -69,8 +69,12 @@ CREATE TABLE IF NOT EXISTS portfolio_projects (
   slug text unique not null,
   year text not null,
   image_url text, -- Store image path here if needed
+  website_url text, -- Public product/company website for this project
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Migration for existing databases (safe to re-run)
+ALTER TABLE portfolio_projects ADD COLUMN IF NOT EXISTS website_url text;
 
 -- ==========================================
 -- 5. SERVICES TABLE

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { getIcon } from "@/lib/icon-library";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import {
   Reveal, WordReveal, TiltCard, Magnetic, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -71,7 +71,6 @@ export const ServicesSection = () => {
           {loading ? (
             <div className="col-span-2 text-center py-20 text-muted-foreground">Loading services...</div>
           ) : services.map((service) => {
-            const Icon = getIcon(service.icon);
             return (
               <motion.div key={service.id} variants={staggerItem}>
                 <TiltCard className="h-full">
@@ -80,7 +79,11 @@ export const ServicesSection = () => {
                     className="group block glass-card h-full transition-all duration-500 hover:bg-white/5 hover:border-primary/30 hover:shadow-[0_20px_60px_-20px_hsl(49_100%_50%/0.15)] active:scale-[0.98]"
                   >
                     <div className="relative w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-8 group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 group-hover:shadow-[0_0_30px_hsl(49_100%_50%/0.4)]">
-                      <Icon className="w-6 h-6 text-primary group-hover:text-black transition-colors duration-500" />
+                      <DynamicIcon
+                        icon={service.icon}
+                        alt={service.title}
+                        className="w-6 h-6 text-primary group-hover:text-black transition-colors duration-500"
+                      />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-light mb-4 flex items-center justify-between gap-3 text-white">
                       {service.title}

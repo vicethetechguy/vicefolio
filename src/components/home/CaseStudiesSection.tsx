@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { getIcon } from "@/lib/icon-library";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { isVideoUrl } from "@/components/ui/media-uploader";
+import { ProjectLink, ProjectWebsiteTag } from "@/components/ProjectLink";
 import {
   Reveal, WordReveal, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -17,6 +18,7 @@ interface CaseStudy {
   description: string;
   slug: string;
   image_url?: string;
+  website_url?: string;
   icon?: string;
 }
 
@@ -81,10 +83,14 @@ export const CaseStudiesSection = () => {
           {loading ? (
             <div className="col-span-2 text-center py-10 text-muted-foreground">Loading projects...</div>
           ) : caseStudies.map((study, index) => {
-            const StudyIcon = getIcon(study.icon, "Coins");
             return (
             <motion.article key={study.slug} variants={staggerItem}>
-              <Link to={`/portfolio/${study.slug}`} className="group block">
+              <ProjectLink
+                websiteUrl={study.website_url}
+                slug={study.slug}
+                title={study.title}
+                className="group block"
+              >
                 {/* Media */}
                 <div className="aspect-[4/3] mb-6 overflow-hidden relative rounded-2xl border border-white/5 group-hover:border-primary/20 transition-colors duration-700">
                   {study.image_url ? (
@@ -133,7 +139,12 @@ export const CaseStudiesSection = () => {
                   {/* Meta row: icon, index, category — metric sits here on mobile */}
                   <div className="flex items-center gap-3 mb-4">
                     <span className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
-                      <StudyIcon className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500" />
+                      <DynamicIcon
+                        icon={study.icon}
+                        fallback="Coins"
+                        alt={study.title}
+                        className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500"
+                      />
                     </span>
                     <span className="text-xs font-mono text-primary/50 tracking-widest shrink-0">
                       {String(index + 1).padStart(2, "0")}
@@ -157,13 +168,14 @@ export const CaseStudiesSection = () => {
                       <p className="text-muted-foreground text-sm leading-relaxed max-w-sm">
                         {study.description}
                       </p>
+                      <ProjectWebsiteTag websiteUrl={study.website_url} />
                     </div>
                     <span className="hidden md:block text-base lg:text-lg font-light text-foreground/40 group-hover:text-primary/80 transition-colors duration-700 shrink-0 max-w-[9rem] text-right leading-snug line-clamp-3">
                       {study.metric}
                     </span>
                   </div>
                 </div>
-              </Link>
+              </ProjectLink>
             </motion.article>
             );
           })}

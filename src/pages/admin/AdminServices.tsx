@@ -11,7 +11,7 @@ import {
     TableShell, LoadingState, EmptyState, FormSheet, ConfirmDialog, Field,
 } from "@/components/admin/admin-ui";
 import { IconPicker } from "@/components/admin/icon-picker";
-import { getIcon } from "@/lib/icon-library";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 
 interface Service {
     id: string;
@@ -151,13 +151,12 @@ export default function AdminServices() {
                             />
                         </td></tr>
                     ) : filtered.map((service) => {
-                        const ServiceIcon = getIcon(service.icon);
                         return (
                         <tr key={service.id} className="hover:bg-gray-50/60 transition-colors">
                             <td className="p-3 pl-4"><MediaThumbnail url={service.image_url || ""} alt={service.title} /></td>
                             <td className="p-3">
                                 <span className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
-                                    <ServiceIcon className="w-4 h-4" />
+                                    <DynamicIcon icon={service.icon} alt={service.title} className="w-4 h-4" />
                                 </span>
                             </td>
                             <td className="p-3 font-medium max-w-[240px]">

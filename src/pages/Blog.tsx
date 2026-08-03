@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { supabase } from "@/lib/supabase";
-import { getIcon } from "@/lib/icon-library";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import {
   Reveal, WordReveal, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -97,7 +97,6 @@ const Blog = () => {
               viewport={{ once: true, margin: "-60px" }}
             >
               {posts.map((post, index) => {
-                const PostIcon = getIcon(post.icon, "FileText");
                 return (
                 <motion.article
                   key={post.slug}
@@ -114,7 +113,12 @@ const Blog = () => {
                     <div className="lg:col-span-2">
                       <div className="flex items-center gap-2.5 mb-3">
                         <span className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
-                          <PostIcon className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500" />
+                          <DynamicIcon
+                            icon={post.icon}
+                            fallback="FileText"
+                            alt={post.title}
+                            className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500"
+                          />
                         </span>
                         <span className="text-xs font-mono text-primary/50 tracking-widest">
                           {String(index + 1).padStart(2, "0")}

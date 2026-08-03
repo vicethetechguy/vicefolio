@@ -39,3 +39,12 @@ export const iconNames = Object.keys(iconLibrary);
 export function getIcon(name: string | undefined | null, fallback: keyof typeof iconLibrary = "Rocket"): LucideIcon {
     return (name && iconLibrary[name]) || iconLibrary[fallback];
 }
+
+/**
+ * The `icon` column stores either a library key ("Coins") or, when the admin
+ * uploads their own artwork, the public URL of that file. This tells the two apart.
+ */
+export function isCustomIcon(value: string | undefined | null): boolean {
+    if (!value) return false;
+    return /^(https?:)?\/\//i.test(value) || value.startsWith("/");
+}

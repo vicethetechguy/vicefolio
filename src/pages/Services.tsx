@@ -5,7 +5,7 @@ import { ArrowUpRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { getIcon } from "@/lib/icon-library";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import {
   Reveal, WordReveal, Magnetic, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -20,8 +20,6 @@ interface Service {
 }
 
 function ServiceCard({ service, index }: { service: Service; index: number }) {
-  const IconComponent = getIcon(service.icon);
-
   return (
     <motion.div
       id={service.id}
@@ -34,7 +32,11 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
       <div>
         <div className="flex items-center gap-5 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-[0_0_30px_hsl(49_100%_50%/0.4)] group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-            <IconComponent className="w-7 h-7 text-primary group-hover:text-black transition-colors duration-500" />
+            <DynamicIcon
+              icon={service.icon}
+              alt={service.title}
+              className="w-7 h-7 text-primary group-hover:text-black transition-colors duration-500"
+            />
           </div>
           <span className="text-xs font-mono text-primary/50 tracking-widest">0{index + 1}</span>
         </div>

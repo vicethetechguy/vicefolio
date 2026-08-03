@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { useTexts } from "@/hooks/useTexts";
 import { supabase } from "@/lib/supabase";
-import { getIcon } from "@/lib/icon-library";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { isVideoUrl } from "@/components/ui/media-uploader";
+import { ProjectLink, ProjectWebsiteTag } from "@/components/ProjectLink";
 import {
   Reveal, WordReveal, staggerContainer, staggerItem,
 } from "@/components/motion/primitives";
@@ -20,6 +20,7 @@ interface PortfolioProject {
   slug: string;
   year: string;
   image_url?: string;
+  website_url?: string;
   icon?: string;
 }
 
@@ -99,10 +100,14 @@ const Portfolio = () => {
               viewport={{ once: true, margin: "-60px" }}
             >
               {projects.map((project, index) => {
-                const ProjectIcon = getIcon(project.icon, "Coins");
                 return (
                 <motion.article key={project.slug} variants={staggerItem}>
-                  <Link to={`/portfolio/${project.slug}`} className="group block">
+                  <ProjectLink
+                    websiteUrl={project.website_url}
+                    slug={project.slug}
+                    title={project.title}
+                    className="group block"
+                  >
                     {/* Media */}
                     <div className="aspect-[4/3] mb-6 overflow-hidden relative rounded-2xl border border-white/5 group-hover:border-primary/20 transition-colors duration-700">
                       {project.image_url ? (
@@ -148,7 +153,12 @@ const Portfolio = () => {
                       {/* Meta row: icon, index, category, year */}
                       <div className="flex items-center gap-3 mb-4">
                         <span className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-[0_0_25px_hsl(49_100%_50%/0.4)] transition-all duration-500">
-                          <ProjectIcon className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500" />
+                          <DynamicIcon
+                            icon={project.icon}
+                            fallback="Coins"
+                            alt={project.title}
+                            className="w-[18px] h-[18px] text-primary group-hover:text-black transition-colors duration-500"
+                          />
                         </span>
                         <span className="text-xs font-mono text-primary/50 tracking-widest shrink-0">
                           {String(index + 1).padStart(2, "0")}
@@ -169,8 +179,9 @@ const Portfolio = () => {
                       <p className="text-muted-foreground text-sm leading-relaxed max-w-sm">
                         {project.description}
                       </p>
+                      <ProjectWebsiteTag websiteUrl={project.website_url} />
                     </div>
-                  </Link>
+                  </ProjectLink>
                 </motion.article>
                 );
               })}

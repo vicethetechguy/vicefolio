@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { MediaUploader, MediaThumbnail } from "@/components/ui/media-uploader";
@@ -11,7 +11,8 @@ import {
     TableShell, LoadingState, EmptyState, FormSheet, ConfirmDialog, Field, slugify,
 } from "@/components/admin/admin-ui";
 import { IconPicker } from "@/components/admin/icon-picker";
-import { getIcon } from "@/lib/icon-library";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
+import { normalizeUrl, prettyUrl } from "@/lib/utils";
 
 interface PortfolioProject {
     id: string;
@@ -22,6 +23,7 @@ interface PortfolioProject {
     slug: string;
     year: string;
     image_url?: string;
+    website_url?: string;
     icon?: string;
 }
 
@@ -31,7 +33,6 @@ export default function AdminPortfolio() {
     const [sheetOpen, setSheetOpen] = useState(false);
     const [current, setCurrent] = useState<Partial<PortfolioProject>>({});
     const [original, setOriginal] = useState("");
-    const [slugTouched, setSlugTouched] = useState(false);
     const [saving, setSaving] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<PortfolioProject | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -69,15 +70,39 @@ export default function AdminPortfolio() {
 
     const dirty = JSON.stringify(current) !== original;
 
+    /**
+     * The slug is no longer edited by hand — it's derived from the title and only
+     * used as an internal identifier. Append a counter if another project already
+     * claimed it, since the column is unique.
+     */
+    const buildSlug = (title: string, ignoreId?: string) => {
+        const base = slugify(title) || "project";
+        const taken = new Set(projects.filter((p) => p.id !== ignoreId).map((p) => p.slug));
+        if (!taken.has(base)) return base;
+        let n = 2;
+        while (taken.has(`${base}-${n}`)) n++;
+        return `${base}-${n}`;
+    };
+
     const handleSave = async () => {
-        if (!current.title || !current.slug) {
-            toast.error("Title and Slug are required.");
+        if (!current.title?.trim()) {
+            toast.error("Title is required.");
+            return;
+        }
+        if (current.website_url?.trim() && !normalizeUrl(current.website_url)) {
+            toast.error("Project link is not a valid web address.");
             return;
         }
         setSaving(true);
+        // Store the canonical absolute URL so the public site can link straight to it
+        const payload = {
+            ...current,
+            slug: current.slug || buildSlug(current.title, current.id),
+            website_url: normalizeUrl(current.website_url),
+        };
         const { error } = current.id
-            ? await supabase.from("portfolio_projects").update(current).eq("id", current.id)
-            : await supabase.from("portfolio_projects").insert([current]);
+            ? await supabase.from("portfolio_projects").update(payload).eq("id", current.id)
+            : await supabase.from("portfolio_projects").insert([payload]);
         if (error) { toast.error("Failed to save project"); }
         else { toast.success("Project saved"); setSheetOpen(false); fetchProjects(); }
         setSaving(false);
@@ -96,18 +121,16 @@ export default function AdminPortfolio() {
     const openEdit = (project: PortfolioProject) => {
         setCurrent(project);
         setOriginal(JSON.stringify(project));
-        setSlugTouched(true);
         setSheetOpen(true);
     };
 
     const openCreate = () => {
         const fresh = {
             title: "", slug: "", category: "Tokenomics", metric: "",
-            year: new Date().getFullYear().toString(), description: "", image_url: "", icon: "Coins",
+            year: new Date().getFullYear().toString(), description: "", image_url: "", website_url: "", icon: "Coins",
         };
         setCurrent(fresh);
         setOriginal(JSON.stringify(fresh));
-        setSlugTouched(false);
         setSheetOpen(true);
     };
 
@@ -155,18 +178,29 @@ export default function AdminPortfolio() {
                             />
                         </td></tr>
                     ) : filtered.map((project) => {
-                        const ProjectIcon = getIcon(project.icon, "Coins");
                         return (
                         <tr key={project.id} className="hover:bg-gray-50/60 transition-colors">
                             <td className="p-3 pl-4"><MediaThumbnail url={project.image_url || ""} alt={project.title} /></td>
                             <td className="p-3">
-                                <span className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
-                                    <ProjectIcon className="w-4 h-4" />
+                                <span className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 overflow-hidden p-1.5">
+                                    <DynamicIcon icon={project.icon} fallback="Coins" alt={project.title} className="w-full h-full" />
                                 </span>
                             </td>
                             <td className="p-3 font-medium max-w-[240px]">
                                 <span className="block truncate" title={project.title}>{project.title}</span>
-                                <span className="block text-xs text-muted-foreground truncate">/{project.slug}</span>
+                                {normalizeUrl(project.website_url) ? (
+                                    <a
+                                        href={normalizeUrl(project.website_url)!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-0.5 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline truncate"
+                                    >
+                                        <ExternalLink className="h-3 w-3 shrink-0" />
+                                        {prettyUrl(project.website_url)}
+                                    </a>
+                                ) : (
+                                    <span className="block text-xs text-muted-foreground">No project link</span>
+                                )}
                             </td>
                             <td className="p-3 hidden sm:table-cell">
                                 {project.category && (
@@ -211,24 +245,33 @@ export default function AdminPortfolio() {
                     <Field label="Title" required>
                         <Input
                             value={current.title || ""}
-                            onChange={(e) => setField({
-                                title: e.target.value,
-                                ...(slugTouched ? {} : { slug: slugify(e.target.value) }),
-                            })}
+                            onChange={(e) => setField({ title: e.target.value })}
                         />
                     </Field>
+                    <Field
+                        label="Project Link"
+                        hint="The project's live website. Clicking the project title on the site opens this in a new tab."
+                    >
+                        <Input
+                            type="url"
+                            inputMode="url"
+                            placeholder="https://naijaeats.com"
+                            value={current.website_url || ""}
+                            onChange={(e) => setField({ website_url: e.target.value })}
+                        />
+                        {current.website_url && !normalizeUrl(current.website_url) && (
+                            <p className="mt-1 text-xs text-red-600">That doesn't look like a valid web address.</p>
+                        )}
+                    </Field>
                     <div className="grid grid-cols-2 gap-4">
-                        <Field label="Slug" required hint="Auto-generated from title; edit to override.">
-                            <Input value={current.slug || ""} onChange={(e) => { setSlugTouched(true); setField({ slug: e.target.value }); }} />
-                        </Field>
                         <Field label="Category">
                             <Input value={current.category || ""} onChange={(e) => setField({ category: e.target.value })} />
                         </Field>
-                        <Field label="Metric Spotlight" hint="e.g. $42M TVL">
-                            <Input value={current.metric || ""} onChange={(e) => setField({ metric: e.target.value })} />
-                        </Field>
                         <Field label="Year">
                             <Input value={current.year || ""} onChange={(e) => setField({ year: e.target.value })} />
+                        </Field>
+                        <Field label="Metric Spotlight" hint="e.g. $42M TVL" className="col-span-2">
+                            <Input value={current.metric || ""} onChange={(e) => setField({ metric: e.target.value })} />
                         </Field>
                     </div>
                     <IconPicker
