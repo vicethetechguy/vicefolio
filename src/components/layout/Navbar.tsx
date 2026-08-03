@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { ArrowUpRight, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { name: "About Me", path: "/about" },
@@ -9,22 +10,63 @@ const navLinks = [
   { name: "Blog", path: "/blog" },
 ];
 
+/* Curtain wipes down on open, back up on close */
+const overlayVariants = {
+  closed: {
+    clipPath: "inset(0% 0% 100% 0%)",
+    transition: { duration: 0.65, ease: [0.76, 0, 0.24, 1] as const, delay: 0.35 },
+  },
+  open: {
+    clipPath: "inset(0% 0% 0% 0%)",
+    transition: { duration: 0.65, ease: [0.76, 0, 0.24, 1] as const },
+  },
+};
+
+const listVariants = {
+  closed: { transition: { staggerChildren: 0.06, staggerDirection: -1 as const } },
+  open: { transition: { staggerChildren: 0.09, delayChildren: 0.3 } },
+};
+
+/* Links rise out of a clipping mask with a slight rotation */
+const itemVariants = {
+  closed: {
+    y: "120%", rotate: 5, opacity: 0,
+    transition: { duration: 0.45, ease: [0.76, 0, 0.24, 1] as const },
+  },
+  open: {
+    y: "0%", rotate: 0, opacity: 1,
+    transition: { duration: 0.75, ease: [0.21, 0.6, 0.35, 1] as const },
+  },
+};
+
+const footerVariants = {
+  closed: { opacity: 0, y: 20, transition: { duration: 0.3 } },
+  open: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.75 } },
+};
+
 export const Navbar = () => {
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  // Close menu on navigation, lock scroll while open
+  useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
-      <nav className="container-vice flex items-center justify-between h-20 md:h-24">
+      <nav className="container-vice flex items-center justify-between h-20 md:h-24 relative z-[70]">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 group">
           <svg
             width="32"
             height="32"
             viewBox="0 0 32 32"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="text-foreground"
+            className="text-foreground group-hover:text-primary transition-colors duration-500 group-hover:drop-shadow-[0_0_10px_hsl(49_100%_50%/0.5)]"
           >
             <path
               d="M16 4L4 12V20L16 28L28 20V12L16 4Z"
@@ -39,7 +81,7 @@ export const Navbar = () => {
           </svg>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop navigation */}
         <div className="hidden md:flex items-center gap-10">
           {navLinks.map((link) => (
             <Link
@@ -64,45 +106,101 @@ export const Navbar = () => {
           <ArrowUpRight className="w-3.5 h-3.5" />
         </Link>
 
-        {/* Mobile Menu Button */}
+        {/* Hamburger — morphs into an X */}
         <button
-          className="md:hidden p-2"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden relative w-10 h-10 flex flex-col items-center justify-center gap-[7px] group"
+          onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
+          aria-expanded={open}
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          <motion.span
+            className="block w-6 h-[2px] bg-foreground rounded-full origin-center"
+            animate={open ? { rotate: 45, y: 4.5, backgroundColor: "hsl(49 100% 50%)" } : { rotate: 0, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.76, 0, 0.24, 1] }}
+          />
+          <motion.span
+            className="block w-6 h-[2px] bg-foreground rounded-full origin-center"
+            animate={open ? { rotate: -45, y: -4.5, backgroundColor: "hsl(49 100% 50%)" } : { rotate: 0, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.76, 0, 0.24, 1] }}
+          />
         </button>
       </nav>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-background border-t border-border animate-[fadeIn_0.3s_ease-out]">
-          <div className="container-vice py-8 flex flex-col gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`text-2xl font-light ${
-                  location.pathname === link.path
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-            <Link
-              to="/booking"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 text-2xl font-light mt-4 pt-4 border-t border-border"
+      {/* ── Fullscreen cinematic menu ── */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="md:hidden fixed inset-0 z-[60] bg-background flex flex-col"
+            variants={overlayVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+          >
+            {/* Atmosphere */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute inset-0 bg-grid-faint [mask-image:radial-gradient(ellipse_80%_70%_at_50%_30%,black,transparent)]" />
+              <div className="aurora-gold absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full blur-3xl" />
+              <div className="aurora-cool absolute -bottom-40 -left-32 w-[26rem] h-[26rem] rounded-full blur-3xl" />
+              <div className="bg-noise absolute inset-0 opacity-[0.04] mix-blend-overlay" />
+            </div>
+
+            {/* Links */}
+            <motion.nav
+              className="relative z-10 flex-1 flex flex-col justify-center px-8"
+              variants={listVariants}
+              initial="closed"
+              animate="open"
+              exit="closed"
             >
-              Book A Call
-              <ArrowUpRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-      )}
+              {navLinks.map((link, i) => (
+                <div key={link.path} className="overflow-hidden py-1">
+                  <motion.div variants={itemVariants} className="will-change-transform">
+                    <Link
+                      to={link.path}
+                      onClick={() => setOpen(false)}
+                      className={`group flex items-baseline gap-4 text-5xl sm:text-6xl font-extralight tracking-tight leading-[1.15] transition-colors duration-300 ${
+                        location.pathname === link.path
+                          ? "text-primary"
+                          : "text-foreground hover:text-primary"
+                      }`}
+                    >
+                      <span className="text-xs font-mono text-primary/50 tracking-widest translate-y-[-0.5em]">
+                        0{i + 1}
+                      </span>
+                      <span className="relative">
+                        {link.name}
+                        <span className="absolute left-0 -bottom-1 h-[2px] w-full bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                      </span>
+                    </Link>
+                  </motion.div>
+                </div>
+              ))}
+            </motion.nav>
+
+            {/* Footer CTA */}
+            <motion.div
+              className="relative z-10 px-8 pb-12"
+              variants={footerVariants}
+              initial="closed"
+              animate="open"
+              exit="closed"
+            >
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+              <Link
+                to="/booking"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground py-5 rounded-full text-xs uppercase font-bold tracking-widest shadow-[0_0_30px_hsl(49_100%_50%/0.3)] active:scale-95 transition-transform"
+              >
+                Book A Call
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
+              <p className="text-center text-xs text-muted-foreground mt-6 tracking-widest uppercase">
+                Tokenomics · Strategy · Web3
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

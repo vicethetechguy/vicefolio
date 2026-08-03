@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { useInView } from "@/hooks/useInView";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useTexts } from "@/hooks/useTexts";
 import { supabase } from "@/lib/supabase";
+import {
+  Reveal, WordReveal, staggerContainer, staggerItem,
+} from "@/components/motion/primitives";
 
 interface BlogPost {
   title: string;
@@ -16,8 +19,6 @@ interface BlogPost {
 }
 
 const Blog = () => {
-  const [headerRef, headerInView] = useInView({ threshold: 0.1 });
-  const [gridRef, gridInView] = useInView({ threshold: 0.05 });
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const { getText } = useTexts();
@@ -44,27 +45,37 @@ const Blog = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="section-padding">
-        <div className="container-vice">
-          <div
-            ref={headerRef}
-            className={`max-w-4xl transition-all duration-700 ${headerInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-          >
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-              Blog
-            </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8">
-              {getText("blog_heading", "Insights & Analysis")}
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              {getText("blog_description", "Thoughts on tokenomics, Web3 strategy, and building sustainable decentralized systems.")}
-            </p>
+      <section className="section-padding relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-grid-faint [mask-image:radial-gradient(ellipse_60%_60%_at_30%_30%,black,transparent)]" />
+          <div className="aurora-gold absolute -top-40 -right-52 w-[36rem] h-[36rem] rounded-full blur-3xl" />
+          <div className="bg-noise absolute inset-0 opacity-[0.03] mix-blend-overlay" />
+        </div>
+
+        <div className="container-vice relative z-10">
+          <div className="max-w-4xl">
+            <Reveal y={20}>
+              <p className="text-xs uppercase tracking-widest text-primary mb-4 flex items-center gap-3">
+                <span className="w-8 h-px bg-primary/60" />
+                Blog
+              </p>
+            </Reveal>
+            <WordReveal
+              as="h1"
+              text={getText("blog_heading", "Insights & Analysis")}
+              className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-8"
+              delay={0.15}
+            />
+            <Reveal delay={0.4}>
+              <p className="text-lg text-muted-foreground max-w-2xl">
+                {getText("blog_description", "Thoughts on tokenomics, Web3 strategy, and building sustainable decentralized systems.")}
+              </p>
+            </Reveal>
           </div>
         </div>
       </section>
 
-      {/* Posts Grid */}
+      {/* Posts */}
       <section className="pb-20">
         <div className="container-vice">
           {loading ? (
@@ -76,38 +87,49 @@ const Blog = () => {
               No published blogs available at the moment.
             </div>
           ) : (
-            <div ref={gridRef} className="space-y-0">
-              {posts.map((post, index) => (
-                <article
+            <motion.div
+              className="space-y-0"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-60px" }}
+            >
+              {posts.map((post) => (
+                <motion.article
                   key={post.slug}
-                  className={`border-t border-border transition-all duration-700 ${gridInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                    }`}
-                  style={{ transitionDelay: `${index * 50}ms` }}
+                  variants={staggerItem}
+                  className="border-t border-border hover:border-primary/40 transition-colors duration-700"
                 >
                   <Link
                     to={`/blog/${post.slug}`}
-                    className="group py-12 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+                    className="group py-12 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative"
                   >
+                    {/* Hover wash */}
+                    <span className="absolute inset-0 -mx-6 rounded-2xl bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
                     <div className="lg:col-span-2">
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                      <p className="text-xs uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-500">
                         {post.category || "General"}
                       </p>
                     </div>
                     <div className="lg:col-span-7">
-                      <h2 className="text-2xl md:text-3xl font-light mb-4 group-hover:underline underline-offset-4">
+                      <h2 className="text-2xl md:text-3xl font-light mb-4 relative inline-block group-hover:translate-x-2 transition-transform duration-500">
                         {post.title}
+                        <span className="absolute left-0 -bottom-1 w-full h-px bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                       </h2>
                       <p className="text-muted-foreground">{post.excerpt}</p>
                     </div>
                     <div className="lg:col-span-3 flex lg:flex-col lg:items-end gap-4 lg:gap-2">
-                      <p className="text-sm text-muted-foreground">{post.date}</p>
+                      <p className="text-sm text-muted-foreground font-mono">{post.date}</p>
                       <p className="text-sm text-muted-foreground">{post.read_time}</p>
-                      <ArrowUpRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity hidden lg:block" />
+                      <span className="hidden lg:flex w-10 h-10 rounded-full border border-white/10 items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 group-hover:border-primary group-hover:text-primary transition-all duration-500">
+                        <ArrowUpRight className="w-4 h-4" />
+                      </span>
                     </div>
                   </Link>
-                </article>
+                </motion.article>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
       </section>
