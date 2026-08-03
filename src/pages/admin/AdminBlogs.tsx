@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { MediaUploader, MediaThumbnail } from "@/components/ui/media-uploader";
+import {
+    PageHeader, SearchInput, FilterPills, Th, useSort, sortItems,
+    TableShell, LoadingState, EmptyState, StatusBadge, FormSheet, ConfirmDialog, Field, slugify,
+} from "@/components/admin/admin-ui";
 
 interface Blog {
     id: string;
@@ -25,9 +27,17 @@ interface Blog {
 export default function AdminBlogs() {
     const [blogs, setBlogs] = useState<Blog[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [currentBlog, setCurrentBlog] = useState<Partial<Blog>>({});
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [current, setCurrent] = useState<Partial<Blog>>({});
+    const [original, setOriginal] = useState("");
+    const [slugTouched, setSlugTouched] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<Blog | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All");
+    const { sort, toggle } = useSort({ key: "date", dir: "desc" });
 
     useEffect(() => { fetchBlogs(); }, []);
 
@@ -39,161 +49,207 @@ export default function AdminBlogs() {
         setLoading(false);
     };
 
+    const filtered = useMemo(() => {
+        let items = blogs;
+        if (statusFilter !== "All") items = items.filter((b) => b.status === statusFilter);
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            items = items.filter((b) =>
+                [b.title, b.category, b.slug, b.excerpt].some((f) => f?.toLowerCase().includes(q))
+            );
+        }
+        return sortItems(items, sort);
+    }, [blogs, search, statusFilter, sort]);
+
+    const dirty = JSON.stringify(current) !== original;
+
     const handleSave = async () => {
-        if (!currentBlog.title || !currentBlog.date || !currentBlog.status || !currentBlog.slug) {
+        if (!current.title || !current.date || !current.status || !current.slug) {
             toast.error("Title, Date, Status, and Slug are required.");
             return;
         }
         setSaving(true);
         const payload = {
-            title: currentBlog.title, date: currentBlog.date, status: currentBlog.status,
-            excerpt: currentBlog.excerpt, category: currentBlog.category,
-            read_time: currentBlog.read_time, slug: currentBlog.slug,
-            content: currentBlog.content, image_url: currentBlog.image_url || "",
+            title: current.title, date: current.date, status: current.status,
+            excerpt: current.excerpt, category: current.category,
+            read_time: current.read_time, slug: current.slug,
+            content: current.content, image_url: current.image_url || "",
         };
-        let error;
-        if (currentBlog.id) {
-            const { error: e } = await supabase.from("blogs").update(payload).eq("id", currentBlog.id);
-            error = e;
-        } else {
-            const { error: e } = await supabase.from("blogs").insert([payload]);
-            error = e;
-        }
+        const { error } = current.id
+            ? await supabase.from("blogs").update(payload).eq("id", current.id)
+            : await supabase.from("blogs").insert([payload]);
         if (error) { toast.error("Failed to save blog"); }
-        else { toast.success("Blog saved successfully"); setIsDialogOpen(false); fetchBlogs(); }
+        else { toast.success("Blog saved"); setSheetOpen(false); fetchBlogs(); }
         setSaving(false);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm("Are you sure you want to delete this blog?")) return;
-        const { error } = await supabase.from("blogs").delete().eq("id", id);
+    const handleDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        const { error } = await supabase.from("blogs").delete().eq("id", deleteTarget.id);
         if (error) { toast.error("Failed to delete blog"); }
-        else { toast.success("Blog deleted"); setBlogs(blogs.filter((b) => b.id !== id)); }
+        else { toast.success("Blog deleted"); setBlogs(blogs.filter((b) => b.id !== deleteTarget.id)); }
+        setDeleting(false);
+        setDeleteTarget(null);
     };
 
-    const openEditDialog = (blog: Blog) => { setCurrentBlog(blog); setIsDialogOpen(true); };
-
-    const openCreateDialog = () => {
-        setCurrentBlog({ title: "", date: new Date().toISOString().split('T')[0], status: "Published", slug: "", category: "General", read_time: "5 min read", image_url: "" });
-        setIsDialogOpen(true);
+    const openEdit = (blog: Blog) => {
+        setCurrent(blog);
+        setOriginal(JSON.stringify(blog));
+        setSlugTouched(true);
+        setSheetOpen(true);
     };
+
+    const openCreate = () => {
+        const fresh = {
+            title: "", date: new Date().toISOString().split("T")[0], status: "Draft",
+            slug: "", category: "General", read_time: "5 min read", image_url: "",
+        };
+        setCurrent(fresh);
+        setOriginal(JSON.stringify(fresh));
+        setSlugTouched(false);
+        setSheetOpen(true);
+    };
+
+    const setField = (patch: Partial<Blog>) => setCurrent((c) => ({ ...c, ...patch }));
 
     return (
-        <div className="p-8 max-h-screen overflow-y-auto w-full">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Manage Blogs</h2>
-                    <p className="text-muted-foreground mt-2">Create, edit, or delete your blog posts.</p>
-                </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="flex gap-2" onClick={openCreateDialog}><PlusCircle className="w-4 h-4" /> New Blog Post</Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader><DialogTitle>{currentBlog.id ? "Edit Blog" : "Create Blog"}</DialogTitle></DialogHeader>
-                        <div className="grid grid-cols-2 gap-4 py-4">
-                            <div className="col-span-2">
-                                <MediaUploader
-                                    value={currentBlog.image_url || ""}
-                                    onChange={(url) => setCurrentBlog({ ...currentBlog, image_url: url })}
-                                    label="Cover Image / Video"
-                                />
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-sm font-medium">Title *</label>
-                                <Input value={currentBlog.title || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') })} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Slug *</label>
-                                <Input value={currentBlog.slug || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, slug: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Date *</label>
-                                <Input type="date" value={currentBlog.date || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, date: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Category</label>
-                                <Input value={currentBlog.category || ""} onChange={(e) => setCurrentBlog({ ...currentBlog, category: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Read Time</label>
-                                <Input value={currentBlog.read_time || ""} placeholder="e.g. 5 min read" onChange={(e) => setCurrentBlog({ ...currentBlog, read_time: e.target.value })} />
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-sm font-medium">Status *</label>
-                                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" value={currentBlog.status || "Draft"} onChange={(e) => setCurrentBlog({ ...currentBlog, status: e.target.value })}>
-                                    <option value="Draft">Draft</option>
-                                    <option value="Published">Published</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-sm font-medium">Excerpt (Short Description)</label>
-                                <Textarea value={currentBlog.excerpt || ""} className="min-h-[80px]" onChange={(e) => setCurrentBlog({ ...currentBlog, excerpt: e.target.value })} />
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-sm font-medium">Full Content</label>
-                                <Textarea value={currentBlog.content || ""} className="min-h-[200px]" placeholder="Write your blog content here..." onChange={(e) => setCurrentBlog({ ...currentBlog, content: e.target.value })} />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+        <div className="p-5 sm:p-8 max-w-7xl mx-auto w-full">
+            <PageHeader title="Blogs" description="Create, edit, and publish your blog posts.">
+                <Button className="gap-2" onClick={openCreate}>
+                    <PlusCircle className="w-4 h-4" /> New Post
+                </Button>
+            </PageHeader>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                <SearchInput value={search} onChange={setSearch} placeholder="Search title, category, slug…" className="sm:w-72" />
+                <FilterPills options={["All", "Published", "Draft"]} value={statusFilter} onChange={setStatusFilter} />
+                <span className="text-xs text-muted-foreground sm:ml-auto">
+                    {filtered.length} of {blogs.length} posts
+                </span>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>All Blog Posts</CardTitle>
-                        <div className="w-1/3"><Input placeholder="Search blogs..." /></div>
-                    </div>
-                </CardHeader>
-                <CardContent>
+            <TableShell>
+                <thead className="bg-gray-50/80 border-b border-gray-200">
+                    <tr>
+                        <Th label="Media" className="w-20" />
+                        <Th label="Title" sortKey="title" sort={sort} onSort={toggle} />
+                        <Th label="Category" sortKey="category" sort={sort} onSort={toggle} className="hidden md:table-cell" />
+                        <Th label="Date" sortKey="date" sort={sort} onSort={toggle} className="hidden sm:table-cell" />
+                        <Th label="Status" sortKey="status" sort={sort} onSort={toggle} />
+                        <Th label="Actions" align="right" />
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
                     {loading ? (
-                        <div className="text-center py-6 text-muted-foreground">Loading blogs...</div>
-                    ) : (
-                        <div className="relative w-full overflow-auto">
-                            <table className="w-full caption-bottom text-sm">
-                                <thead className="[&_tr]:border-b">
-                                    <tr className="border-b transition-colors hover:bg-muted/50">
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Media</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Title</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Category</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
-                                        <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="[&_tr:last-child]:border-0">
-                                    {blogs.length === 0 ? (
-                                        <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">No blogs found.</td></tr>
-                                    ) : blogs.map((blog) => (
-                                        <tr key={blog.id} className="border-b transition-colors hover:bg-muted/50">
-                                            <td className="p-4 align-middle"><MediaThumbnail url={blog.image_url || ""} alt={blog.title} /></td>
-                                            <td className="p-4 align-middle font-medium truncate max-w-[200px]" title={blog.title}>{blog.title}</td>
-                                            <td className="p-4 align-middle">{blog.category || '-'}</td>
-                                            <td className="p-4 align-middle">{blog.date}</td>
-                                            <td className="p-4 align-middle">
-                                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${blog.status === 'Published' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'}`}>
-                                                    {blog.status}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 align-middle text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="icon" onClick={() => openEditDialog(blog)}><Edit className="h-4 w-4 text-blue-500" /></Button>
-                                                    <Button variant="outline" size="icon" onClick={() => handleDelete(blog.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <tr><td colSpan={6}><LoadingState label="Loading blogs…" /></td></tr>
+                    ) : filtered.length === 0 ? (
+                        <tr><td colSpan={6}>
+                            <EmptyState
+                                title={blogs.length === 0 ? "No blog posts yet" : "No posts match your filters"}
+                                description={blogs.length === 0 ? "Write your first post to get started." : "Try a different search or filter."}
+                                action={blogs.length === 0 ? <Button size="sm" onClick={openCreate}>Create post</Button> : undefined}
+                            />
+                        </td></tr>
+                    ) : filtered.map((blog) => (
+                        <tr key={blog.id} className="hover:bg-gray-50/60 transition-colors">
+                            <td className="p-3 pl-4"><MediaThumbnail url={blog.image_url || ""} alt={blog.title} /></td>
+                            <td className="p-3 font-medium max-w-[240px]">
+                                <span className="block truncate" title={blog.title}>{blog.title}</span>
+                                <span className="block text-xs text-muted-foreground truncate">/{blog.slug}</span>
+                            </td>
+                            <td className="p-3 text-muted-foreground hidden md:table-cell">{blog.category || "—"}</td>
+                            <td className="p-3 text-muted-foreground hidden sm:table-cell whitespace-nowrap">{blog.date}</td>
+                            <td className="p-3"><StatusBadge status={blog.status} /></td>
+                            <td className="p-3 pr-4 text-right">
+                                <div className="flex justify-end gap-1">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(blog)}>
+                                        <Edit className="h-4 w-4 text-gray-500" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(blog)}>
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </TableShell>
+
+            <FormSheet
+                open={sheetOpen}
+                onOpenChange={setSheetOpen}
+                title={current.id ? "Edit Post" : "New Post"}
+                description={current.id ? "Update this blog post." : "Write and publish a new blog post."}
+                dirty={dirty}
+                saving={saving}
+                onSave={handleSave}
+            >
+                <div className="space-y-5">
+                    <MediaUploader
+                        value={current.image_url || ""}
+                        onChange={(url) => setField({ image_url: url })}
+                        label="Cover Image / Video"
+                    />
+                    <Field label="Title" required>
+                        <Input
+                            value={current.title || ""}
+                            onChange={(e) => setField({
+                                title: e.target.value,
+                                ...(slugTouched ? {} : { slug: slugify(e.target.value) }),
+                            })}
+                        />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Field label="Slug" required hint="Auto-generated from title; edit to override.">
+                            <Input
+                                value={current.slug || ""}
+                                onChange={(e) => { setSlugTouched(true); setField({ slug: e.target.value }); }}
+                            />
+                        </Field>
+                        <Field label="Date" required>
+                            <Input type="date" value={current.date || ""} onChange={(e) => setField({ date: e.target.value })} />
+                        </Field>
+                        <Field label="Category">
+                            <Input value={current.category || ""} onChange={(e) => setField({ category: e.target.value })} />
+                        </Field>
+                        <Field label="Read Time">
+                            <Input value={current.read_time || ""} placeholder="e.g. 5 min read" onChange={(e) => setField({ read_time: e.target.value })} />
+                        </Field>
+                    </div>
+                    <Field label="Status" required>
+                        <div className="flex gap-2">
+                            {["Draft", "Published"].map((s) => (
+                                <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setField({ status: s })}
+                                    className={`px-4 h-9 rounded-lg text-sm font-medium border transition-colors ${current.status === s
+                                        ? "bg-gray-900 text-white border-gray-900"
+                                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </Field>
+                    <Field label="Excerpt" hint="Short description shown on blog listing.">
+                        <Textarea value={current.excerpt || ""} className="min-h-[80px]" onChange={(e) => setField({ excerpt: e.target.value })} />
+                    </Field>
+                    <Field label="Full Content">
+                        <Textarea value={current.content || ""} className="min-h-[240px]" placeholder="Write your blog content here…" onChange={(e) => setField({ content: e.target.value })} />
+                    </Field>
+                </div>
+            </FormSheet>
+
+            <ConfirmDialog
+                open={!!deleteTarget}
+                onOpenChange={(o) => !o && setDeleteTarget(null)}
+                title={`Delete "${deleteTarget?.title}"?`}
+                description="This blog post will be permanently removed from your site. This cannot be undone."
+                onConfirm={handleDelete}
+                loading={deleting}
+            />
         </div>
     );
 }

@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { MediaUploader, MediaThumbnail } from "@/components/ui/media-uploader";
+import {
+    PageHeader, SearchInput, Th, useSort, sortItems,
+    TableShell, LoadingState, EmptyState, FormSheet, ConfirmDialog, Field,
+} from "@/components/admin/admin-ui";
 
 interface Service {
     id: string;
@@ -22,10 +24,16 @@ interface Service {
 export default function AdminServices() {
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [currentService, setCurrentService] = useState<Partial<Service>>({});
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [current, setCurrent] = useState<Partial<Service>>({});
     const [featuresText, setFeaturesText] = useState("");
+    const [original, setOriginal] = useState("");
     const [saving, setSaving] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<Service | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const [search, setSearch] = useState("");
+    const { sort, toggle } = useSort();
 
     useEffect(() => { fetchServices(); }, []);
 
@@ -37,141 +45,181 @@ export default function AdminServices() {
         setLoading(false);
     };
 
+    const filtered = useMemo(() => {
+        let items = services;
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            items = items.filter((s) =>
+                [s.title, s.description, s.price].some((f) => f?.toLowerCase().includes(q))
+            );
+        }
+        return sortItems(items, sort);
+    }, [services, search, sort]);
+
+    const dirty = JSON.stringify({ ...current, __features: featuresText }) !== original;
+
+    const snapshot = (svc: Partial<Service>, features: string) =>
+        JSON.stringify({ ...svc, __features: features });
+
     const handleSave = async () => {
-        if (!currentService.title || !currentService.description) {
+        if (!current.title || !current.description) {
             toast.error("Title and Description are required.");
             return;
         }
         setSaving(true);
-        const featuresArray = featuresText.split('\n').filter(f => f.trim() !== '');
         const payload = {
-            title: currentService.title,
-            description: currentService.description,
-            price: currentService.price || "",
-            icon: currentService.icon || "Rocket",
-            features: featuresArray,
-            image_url: currentService.image_url || ""
+            title: current.title,
+            description: current.description,
+            price: current.price || "",
+            icon: current.icon || "Rocket",
+            features: featuresText.split("\n").filter((f) => f.trim() !== ""),
+            image_url: current.image_url || "",
         };
-        let error;
-        if (currentService.id) {
-            const { error: e } = await supabase.from("services").update(payload).eq("id", currentService.id);
-            error = e;
-        } else {
-            const { error: e } = await supabase.from("services").insert([payload]);
-            error = e;
-        }
+        const { error } = current.id
+            ? await supabase.from("services").update(payload).eq("id", current.id)
+            : await supabase.from("services").insert([payload]);
         if (error) { toast.error("Failed to save service"); }
-        else { toast.success("Service saved successfully"); setIsDialogOpen(false); fetchServices(); }
+        else { toast.success("Service saved"); setSheetOpen(false); fetchServices(); }
         setSaving(false);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm("Are you sure you want to delete this service?")) return;
-        const { error } = await supabase.from("services").delete().eq("id", id);
+    const handleDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        const { error } = await supabase.from("services").delete().eq("id", deleteTarget.id);
         if (error) { toast.error("Failed to delete service"); }
-        else { toast.success("Service deleted"); setServices(services.filter((s) => s.id !== id)); }
+        else { toast.success("Service deleted"); setServices(services.filter((s) => s.id !== deleteTarget.id)); }
+        setDeleting(false);
+        setDeleteTarget(null);
     };
 
-    const openEditDialog = (service: Service) => {
-        setCurrentService(service);
-        setFeaturesText(service.features ? service.features.join('\n') : "");
-        setIsDialogOpen(true);
+    const openEdit = (service: Service) => {
+        const features = service.features ? service.features.join("\n") : "";
+        setCurrent(service);
+        setFeaturesText(features);
+        setOriginal(snapshot(service, features));
+        setSheetOpen(true);
     };
 
-    const openCreateDialog = () => {
-        setCurrentService({ title: "", description: "", price: "From $10,000", icon: "Rocket", image_url: "" });
+    const openCreate = () => {
+        const fresh = { title: "", description: "", price: "From $10,000", icon: "Rocket", image_url: "" };
+        setCurrent(fresh);
         setFeaturesText("");
-        setIsDialogOpen(true);
+        setOriginal(snapshot(fresh, ""));
+        setSheetOpen(true);
     };
+
+    const setField = (patch: Partial<Service>) => setCurrent((c) => ({ ...c, ...patch }));
 
     return (
-        <div className="p-8 max-h-screen overflow-y-auto w-full">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Manage Services</h2>
-                    <p className="text-muted-foreground mt-2">Update your service offerings, prices, and features.</p>
-                </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="flex gap-2" onClick={openCreateDialog}><PlusCircle className="w-4 h-4" /> New Service</Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader><DialogTitle>{currentService.id ? "Edit Service" : "Add Service"}</DialogTitle></DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <MediaUploader
-                                value={currentService.image_url || ""}
-                                onChange={(url) => setCurrentService({ ...currentService, image_url: url })}
-                                label="Service Image / Video"
-                            />
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Service Title *</label>
-                                <Input value={currentService.title || ""} onChange={(e) => setCurrentService({ ...currentService, title: e.target.value })} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Pricing String</label>
-                                    <Input value={currentService.price || ""} onChange={(e) => setCurrentService({ ...currentService, price: e.target.value })} placeholder="e.g. From $10,000" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Lucide Icon Name</label>
-                                    <Input value={currentService.icon || ""} onChange={(e) => setCurrentService({ ...currentService, icon: e.target.value })} placeholder="e.g. Rocket, Coins, Users" />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Main Description *</label>
-                                <Textarea value={currentService.description || ""} onChange={(e) => setCurrentService({ ...currentService, description: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">"What's Included" Features</label>
-                                <p className="text-xs text-muted-foreground">Put each feature on a new line.</p>
-                                <Textarea value={featuresText} className="min-h-[150px]" onChange={(e) => setFeaturesText(e.target.value)} placeholder={"Feature 1\nFeature 2\nFeature 3"} />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+        <div className="p-5 sm:p-8 max-w-7xl mx-auto w-full">
+            <PageHeader title="Services" description="Update your service offerings, pricing, and features.">
+                <Button className="gap-2" onClick={openCreate}>
+                    <PlusCircle className="w-4 h-4" /> New Service
+                </Button>
+            </PageHeader>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                <SearchInput value={search} onChange={setSearch} placeholder="Search services…" className="sm:w-72" />
+                <span className="text-xs text-muted-foreground sm:ml-auto">
+                    {filtered.length} of {services.length} services
+                </span>
             </div>
 
-            <Card>
-                <CardContent className="pt-6">
+            <TableShell>
+                <thead className="bg-gray-50/80 border-b border-gray-200">
+                    <tr>
+                        <Th label="Media" className="w-20" />
+                        <Th label="Title" sortKey="title" sort={sort} onSort={toggle} />
+                        <Th label="Pricing" sortKey="price" sort={sort} onSort={toggle} className="hidden sm:table-cell" />
+                        <Th label="Features" className="hidden md:table-cell" />
+                        <Th label="Actions" align="right" />
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
                     {loading ? (
-                        <div className="text-center py-6 text-muted-foreground">Loading services...</div>
-                    ) : (
-                        <div className="relative w-full overflow-auto">
-                            <table className="w-full caption-bottom text-sm">
-                                <thead className="[&_tr]:border-b">
-                                    <tr className="border-b transition-colors hover:bg-muted/50">
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Media</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Title</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Pricing</th>
-                                        <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="[&_tr:last-child]:border-0">
-                                    {services.length === 0 ? (
-                                        <tr><td colSpan={4} className="text-center py-10 text-muted-foreground">No services found.</td></tr>
-                                    ) : services.map((service) => (
-                                        <tr key={service.id} className="border-b transition-colors hover:bg-muted/50">
-                                            <td className="p-4 align-middle"><MediaThumbnail url={service.image_url || ""} alt={service.title} /></td>
-                                            <td className="p-4 align-middle font-medium">{service.title}</td>
-                                            <td className="p-4 align-middle">{service.price}</td>
-                                            <td className="p-4 align-middle text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="icon" onClick={() => openEditDialog(service)}><Edit className="h-4 w-4 text-blue-500" /></Button>
-                                                    <Button variant="outline" size="icon" onClick={() => handleDelete(service.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                        <tr><td colSpan={5}><LoadingState label="Loading services…" /></td></tr>
+                    ) : filtered.length === 0 ? (
+                        <tr><td colSpan={5}>
+                            <EmptyState
+                                title={services.length === 0 ? "No services yet" : "No services match your search"}
+                                description={services.length === 0 ? "Add your first service offering." : "Try a different search."}
+                                action={services.length === 0 ? <Button size="sm" onClick={openCreate}>Add service</Button> : undefined}
+                            />
+                        </td></tr>
+                    ) : filtered.map((service) => (
+                        <tr key={service.id} className="hover:bg-gray-50/60 transition-colors">
+                            <td className="p-3 pl-4"><MediaThumbnail url={service.image_url || ""} alt={service.title} /></td>
+                            <td className="p-3 font-medium max-w-[240px]">
+                                <span className="block truncate" title={service.title}>{service.title}</span>
+                            </td>
+                            <td className="p-3 text-muted-foreground hidden sm:table-cell whitespace-nowrap">{service.price || "—"}</td>
+                            <td className="p-3 text-muted-foreground hidden md:table-cell">
+                                {service.features?.length ? `${service.features.length} listed` : "—"}
+                            </td>
+                            <td className="p-3 pr-4 text-right">
+                                <div className="flex justify-end gap-1">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(service)}>
+                                        <Edit className="h-4 w-4 text-gray-500" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(service)}>
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </TableShell>
+
+            <FormSheet
+                open={sheetOpen}
+                onOpenChange={setSheetOpen}
+                title={current.id ? "Edit Service" : "New Service"}
+                description={current.id ? "Update this service offering." : "Add a new service offering."}
+                dirty={dirty}
+                saving={saving}
+                onSave={handleSave}
+            >
+                <div className="space-y-5">
+                    <MediaUploader
+                        value={current.image_url || ""}
+                        onChange={(url) => setField({ image_url: url })}
+                        label="Service Image / Video"
+                    />
+                    <Field label="Service Title" required>
+                        <Input value={current.title || ""} onChange={(e) => setField({ title: e.target.value })} />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Field label="Pricing String">
+                            <Input value={current.price || ""} placeholder="e.g. From $10,000" onChange={(e) => setField({ price: e.target.value })} />
+                        </Field>
+                        <Field label="Lucide Icon Name" hint="e.g. Rocket, Coins, Users">
+                            <Input value={current.icon || ""} onChange={(e) => setField({ icon: e.target.value })} />
+                        </Field>
+                    </div>
+                    <Field label="Main Description" required>
+                        <Textarea value={current.description || ""} className="min-h-[100px]" onChange={(e) => setField({ description: e.target.value })} />
+                    </Field>
+                    <Field label={`"What's Included" Features`} hint="Put each feature on a new line.">
+                        <Textarea
+                            value={featuresText}
+                            className="min-h-[150px]"
+                            onChange={(e) => setFeaturesText(e.target.value)}
+                            placeholder={"Feature 1\nFeature 2\nFeature 3"}
+                        />
+                    </Field>
+                </div>
+            </FormSheet>
+
+            <ConfirmDialog
+                open={!!deleteTarget}
+                onOpenChange={(o) => !o && setDeleteTarget(null)}
+                title={`Delete "${deleteTarget?.title}"?`}
+                description="This service will be permanently removed from your site. This cannot be undone."
+                onConfirm={handleDelete}
+                loading={deleting}
+            />
         </div>
     );
 }

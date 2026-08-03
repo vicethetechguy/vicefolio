@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Save } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { MediaUploader } from "@/components/ui/media-uploader";
 import { MediaGalleryUploader } from "@/components/ui/media-gallery-uploader";
+import { PageHeader, SearchInput, LoadingState } from "@/components/admin/admin-ui";
+import { cn } from "@/lib/utils";
 
 interface TextItem {
     id: string;
@@ -84,9 +86,10 @@ const defaultTextSections: TextItem[] = [
 
 export default function AdminTexts() {
     const [texts, setTexts] = useState<TextItem[]>([]);
+    const [changedIds, setChangedIds] = useState<Set<string>>(new Set());
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
-    const changedIds = useRef<Set<string>>(new Set());
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -106,98 +109,151 @@ export default function AdminTexts() {
     }, []);
 
     const handleChange = (id: string, value: string) => {
-        setTexts(prev => prev.map(t => t.id === id ? { ...t, value } : t));
-        changedIds.current.add(id);
+        setTexts((prev) => prev.map((t) => (t.id === id ? { ...t, value } : t)));
+        setChangedIds((prev) => new Set(prev).add(id));
     };
 
     const handleSave = async () => {
-        if (changedIds.current.size === 0) {
+        if (changedIds.size === 0) {
             toast.info("No changes to save");
             return;
         }
-
         setSaving(true);
-        const toSave = texts.filter(t => changedIds.current.has(t.id));
-        
+        const toSave = texts.filter((t) => changedIds.has(t.id));
         const { error } = await supabase.from("texts").upsert(
             toSave.map((t) => ({ id: t.id, label: t.label, value: t.value }))
         );
-        
         if (error) {
             console.error("Error saving content:", error);
             toast.error("Failed to save changes.");
         } else {
-            toast.success(`Saved ${toSave.length} item(s) successfully`);
-            changedIds.current.clear();
+            toast.success(`Saved ${toSave.length} item(s)`);
+            setChangedIds(new Set());
         }
         setSaving(false);
     };
 
-    if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+    const { groups, groupOrder } = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        const visible = q
+            ? texts.filter((t) =>
+                t.label.toLowerCase().includes(q) ||
+                t.id.toLowerCase().includes(q) ||
+                t.value.toLowerCase().includes(q))
+            : texts;
+        const groups: Record<string, TextItem[]> = {};
+        const groupOrder: string[] = [];
+        visible.forEach((t) => {
+            const match = t.label.match(/^(.*?) — /);
+            const group = match ? match[1] : "Other";
+            if (!groups[group]) { groups[group] = []; groupOrder.push(group); }
+            groups[group].push(t);
+        });
+        return { groups, groupOrder };
+    }, [texts, search]);
 
-    const groups: Record<string, TextItem[]> = {};
-    const groupOrder: string[] = [];
-    texts.forEach((t) => {
-        const match = t.label.match(/^(.*?) — /);
-        const group = match ? match[1] : "Other";
-        if (!groups[group]) {
-            groups[group] = [];
-            groupOrder.push(group);
-        }
-        groups[group].push(t);
-    });
+    if (loading) return <div className="p-8"><LoadingState label="Loading site content…" /></div>;
 
     return (
-        <div className="p-8 max-w-4xl max-h-screen overflow-y-auto w-full">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Global Content Config</h2>
-                    <p className="text-muted-foreground mt-2">Managing only changed items for faster performance.</p>
-                </div>
-                <Button onClick={handleSave} disabled={saving} className="bg-vice-500 hover:bg-vice-600 font-semibold px-8">
-                    {saving ? "Saving..." : "Save All Changes"}
-                </Button>
-            </div>
+        <div className="relative">
+            <div className="p-5 sm:p-8 max-w-4xl mx-auto w-full pb-28">
+                <PageHeader
+                    title="Text Config"
+                    description="Edit every piece of text and media across your site. Only changed items are saved."
+                />
 
-            <div className="space-y-12 mb-10">
-                {groupOrder.map((group) => (
-                    <div key={group}>
-                        <h3 className="text-xl font-semibold tracking-tight mb-4 border-b pb-2 flex items-center gap-2">
-                             {group}
-                        </h3>
-                        <div className="space-y-4">
-                            {groups[group].map((text) => {
-                                const isMedia = text.id.startsWith("media_");
-                                const isGallery = text.id.startsWith("gallery_");
-                                const isLong = text.value.length > 80 || text.id.includes("paragraph") || text.id.includes("description") || text.id.includes("journey");
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Search labels, keys, or content…"
+                    className="mb-6 sm:w-96"
+                />
 
-                                return (
-                                    <Card key={text.id} className={`border-border/50 transition-all ${changedIds.current.has(text.id) ? "border-vice-400 ring-1 ring-vice-400/20" : ""}`}>
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-base font-medium">{text.label.replace(/^.*? — /, "")}</CardTitle>
-                                            <CardDescription className="text-[10px] uppercase opacity-30">{text.id}</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
+                {groupOrder.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-12">No fields match your search.</p>
+                )}
+
+                <div className="space-y-10">
+                    {groupOrder.map((group) => (
+                        <section key={group}>
+                            <h3 className="text-base font-semibold tracking-tight mb-3 flex items-center gap-2">
+                                {group}
+                                <span className="text-xs font-normal text-muted-foreground">
+                                    {groups[group].length} field{groups[group].length !== 1 ? "s" : ""}
+                                </span>
+                            </h3>
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+                                {groups[group].map((text) => {
+                                    const isMedia = text.id.startsWith("media_");
+                                    const isGallery = text.id.startsWith("gallery_");
+                                    const isLong = text.value.length > 80 || text.id.includes("paragraph") || text.id.includes("description") || text.id.includes("journey");
+                                    const changed = changedIds.has(text.id);
+
+                                    return (
+                                        <div key={text.id} className={cn("p-4 transition-colors", changed && "bg-blue-50/50")}>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-sm font-medium text-gray-800">
+                                                    {text.label.replace(/^.*? — /, "")}
+                                                </label>
+                                                <div className="flex items-center gap-2">
+                                                    {changed && (
+                                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
+                                                            Edited
+                                                        </span>
+                                                    )}
+                                                    <code className="text-[10px] text-gray-300">{text.id}</code>
+                                                </div>
+                                            </div>
                                             {isGallery ? (
-                                                <MediaGalleryUploader 
-                                                    value={text.value} 
-                                                    onChange={(value) => handleChange(text.id, value)} 
-                                                    label="" 
+                                                <MediaGalleryUploader
+                                                    value={text.value}
+                                                    onChange={(value) => handleChange(text.id, value)}
+                                                    label=""
                                                 />
                                             ) : isMedia ? (
                                                 <MediaUploader value={text.value} onChange={(url) => handleChange(text.id, url)} label="" />
                                             ) : isLong ? (
-                                                <Textarea className="min-h-[120px] bg-secondary/30 focus:bg-secondary/50 border-none transition-all" value={text.value} onChange={(e) => handleChange(text.id, e.target.value)} />
+                                                <Textarea
+                                                    className="min-h-[110px] bg-gray-50 focus:bg-white border-gray-200 transition-colors"
+                                                    value={text.value}
+                                                    onChange={(e) => handleChange(text.id, e.target.value)}
+                                                />
                                             ) : (
-                                                <Input className="bg-secondary/30 focus:bg-secondary/50 border-none transition-all" value={text.value} onChange={(e) => handleChange(text.id, e.target.value)} />
+                                                <Input
+                                                    className="bg-gray-50 focus:bg-white border-gray-200 transition-colors"
+                                                    value={text.value}
+                                                    onChange={(e) => handleChange(text.id, e.target.value)}
+                                                />
                                             )}
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
-                        </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    ))}
+                </div>
+            </div>
+
+            {/* Sticky save bar */}
+            <div className={cn(
+                "fixed bottom-0 right-0 left-0 md:left-64 z-30 transition-transform duration-200",
+                changedIds.size === 0 && "translate-y-full"
+            )}>
+                <div className="mx-auto max-w-4xl px-5 sm:px-8 pb-4">
+                    <div className="bg-zinc-950 text-white rounded-xl shadow-lg px-4 py-3 flex items-center justify-between gap-4">
+                        <span className="text-sm">
+                            <strong>{changedIds.size}</strong> unsaved change{changedIds.size !== 1 ? "s" : ""}
+                        </span>
+                        <Button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="bg-white text-zinc-950 hover:bg-gray-200 gap-2 h-9"
+                        >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {saving ? "Saving…" : "Save changes"}
+                        </Button>
                     </div>
-                ))}
+                </div>
             </div>
         </div>
     );
